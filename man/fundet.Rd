@@ -1,5 +1,5 @@
 \name{fundet}
-\Rdversion{1.1}
+\Rdversion{1.2}
 \alias{fundet}
 
 \title{ 1-dimensional test function "fundet" }
@@ -15,17 +15,13 @@ fundet(x)
 \arguments{
   \item{x}{1-dimensional input}
   }
-%\details{}
-\value{Image of x by fundet}
-%\references{}
-\author{ David Ginsbourger (Neuchatel University, Stochastic Hydrogeology Group) }
-%\note{}
 
-%\seealso{}
+\value{Image of x by fundet}
+
+\author{ David Ginsbourger (Neuchatel University, Stochastic Hydrogeology Group) }
 
 \examples{
 curve(fundet)}
 
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory. 
 \keyword{internal}
+

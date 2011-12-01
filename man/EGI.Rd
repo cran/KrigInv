@@ -1,201 +1,185 @@
-
 \name{EGI}
-\Rdversion{1.1}
+\Rdversion{1.2}
 \alias{EGI}
 
-\title{Efficient Global Inversion: sequential inversion algorithm based on Kriging}
-
-\description{
-Sequential sampling based on the optimization of a kriging-based criterion, with model update after each evaluation. Five criteria are available for selecting experiments, three inexpensive ("bichon", "ranjan", and "tmse") and two expensive ones ("timse" and "sur", which require numerical integration). }
-
-\usage{
-EGI(T, model, method.param, sampling.method, discrete.X,
-new.noise.var, fun, iter, lower, upper, integration.points,
-parinit, control, kmcontrol)
+\title{
+Efficient Global Inversion: sequential inversion algorithm based on Kriging
 }
-
+\description{
+Sequential sampling based on the optimization of a kriging-based criterion, with model update after each evaluation. Seven criteria are available for selecting experiments, three inexpensive (\code{"bichon"}, \code{"ranjan"}, and \code{"tmse"}) and four expensive ones that require numerical integration (\code{"imse"}, \code{"timse"}, \code{"sur"} and \code{"jn"}).
+}
+\usage{
+EGI(T, model, method = NULL, method.param = NULL,
+fun, iter, lower, upper, new.noise.var = 0,
+optimcontrol = NULL, kmcontrol = NULL, integcontrol = NULL, ...)
+}
 
 \arguments{
-  \item{T}{target value (a real number). The sampling algorithm and the underlying kriging model aim to find the points below (resp. over) T.} 
-
-  \item{model}{ a Kriging model of "km" class }
-
-  \item{method.param}{ optional tolerance value (a real number) for methods "ranjan", "bichon", "tmse" and "timse"}
-
-  \item{sampling.method}{ Criterion used for choosing observations: "ranjan" (default) , "bichon", "tmse", "timse" or "sur".}
-
-  \item{discrete.X}{ optional matrix of candidate points. If provided, the search of the optimum for new observations is made on this discrete set instead of running the continuous optimisation. For "sur" and "timse", discrete.X also serves as integration points (and then the argument "integration.points" is ignored)}
-
-  \item{new.noise.var}{ optional scalar value of the noise variance for the new observations }
-
-  \item{fun}{ objective function }
-
-  \item{iter}{ Number of iterations }
-
-  \item{lower}{ vector containing the lower bounds of the variables to be optimized over }
-
-  \item{upper}{ vector containing the upper bounds of the variables to be optimized over }
-
-  \item{integration.points}{ optional scalar or matrix for "sur" and "timse" criteria. If it is scalar, it defines the number of integration points; if it is a matrix, it defines the integration points}
-
-  \item{parinit}{ optional vector of initial values for the variables to be optimized over }
-
-   \item{control}{  optional list of control parameters for the optimization of the variables. 
-One can control  \code{"pop.size"}  (default : [4+3*log(nb of variables)]),  \code{"max.generations"} (5),  
-\code{"wait.generations"} (2) and  \code{"BFGSburnin"} (0) of function  \code{"genoud"} (see \code{\link[rgenoud]{genoud}}). 
-Numbers into brackets are the default values }  
-
-    \item{kmcontrol}{ an optional list representing the control variables for the re-estimation of the kriging model once new points are sampled. 
-		    The items are the same as in \code{\link[DiceKriging]{km}} : 
-
-		\code{penalty}, \code{optim.method}, \code{parinit}, \code{control}. 
-
-		The default values are those contained in \code{model}, typically corresponding to the variables 
-		used in \code{\link[DiceKriging]{km}} to estimate a kriging model from the initial design points.}
+  \item{T}{
+Target value (a real number). The sampling algorithm and the underlying kriging model aim at finding the points for which the output is close to T.
 }
-
-
+  \item{model}{
+A Kriging model of \code{\link[DiceKriging]{km}} class.
+}
+  \item{method}{
+(String) Criterion used for choosing observations. Available criteria are \code{"ranjan"} (default) , \code{"bichon"}, \code{"tmse"}, \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"}.
+}
+  \item{method.param}{
+Optional tolerance value (scalar) for methods \code{"ranjan"}, \code{"bichon"}, \code{"tmse"} and \code{"timse"}. If not provided, default value is used (1 for ranjan and bichon, 0 for tmse and timse).
+}
+  \item{fun}{
+Objective function.
+}
+  \item{iter}{
+Number of iterations (i.e. number of additional sampling points).
+}
+  \item{lower}{
+Vector containing the lower bounds of the design space.
+}
+  \item{upper}{
+Vector containing the upper bounds of the design space.
+}
+  \item{new.noise.var}{
+Optional scalar value of the noise variance of the new observations.
+}
+  \item{optimcontrol}{
+Optional list of control parameters for the optimization of the sampling criterion. The field \code{method} defines which optimization method is used: it can be either \code{"genoud"} (default) for an optimisation using the genoud algorithm, or \code{"discrete"} for an optimisation over a specified discrete set. 
+If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm: 
+\code{pop.size}  (default : 50*d),  \code{max.generations} (10*d), \code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
+If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly. 
+}
+  \item{kmcontrol}{
+Optional list representing the control variables for the re-estimation of the kriging model once new points are sampled. 
+The items are the same as in \code{\link[DiceKriging]{km}}.
+}
+  \item{integcontrol}{
+Optional list specifying the procedure to build the integration points and weights, relevant only for the sampling criteria based on numerical integration: 
+(\code{"imse"}, \code{"timse"}, \code{"sur"} or \code{"jn"}). Many options are possible.
+A) If nothing is specified, 100*d points are chosen using the Sobol sequence. 
+B) One can directly set the field \code{integration.points} (a p * d matrix) for prespecified integration points. In this case these integration points and the corresponding vector \code{integration.weights} will be used for all the iterations of the algorithm. 
+C) If the field \code{integration.points} is not set then the integration points are renewed at each iteration. 
+In that case one can control the number of integration points \code{n.points} (default: 100*d) and a specific distribution \code{distrib}. Possible values for \code{distrib} are: 
+\code{"sobol"}, \code{"MC"}, \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"} (default: \code{"sobol"}). 
+C.1) The choice \code{"sobol"} corresponds to integration points chosen with the Sobol sequence in dimension d (uniform weight). 
+C.2) The choice \code{"MC"} corresponds to points chosen randomly, uniformly on the domain. 
+C.3) The choices \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"} correspond to importance sampling distributions (unequal weights). It is strongly recommended to use the importance sampling distribution corresponding to the chosen sampling criterion. 
+When important sampling procedures are chosen, \code{n.points} points are chosen using importance sampling among a discrete set of \code{n.candidates} points (default: \code{n.points*10}) which are distributed according to a distribution \code{init.distrib} (default: \code{"sobol"}). Possible values for \code{init.distrib} are the space filling distributions \code{"sobol"} and \code{"MC"} or an user defined distribution \code{"spec"}. 
+The \code{"sobol"} and \code{"MC"} choices correspond to quasi random and random points in the domain. 
+If the \code{"spec"} value is chosen the user must fill in manually the field \code{init.distrib.spec} to specify himself a n.candidates * d matrix of points in dimension d.
+}
+  \item{\dots}{
+Other arguments of the target function \code{fun}.
+}
+}
+\details{
+The function used to build the integration points and weights (based on the options specified in \code{integcontrol}) is the function \code{\link{integration_design}}
+}
 \value{A list with components:
-\item{par}{ The added observations}
-\item{value}{the added observation values}
-\item{nsteps}{the number of added observations}
-\item{lastmodel}{the current (last) kriging model of "km" class}
+\item{par}{The added observations (ite * d matrix)}
+\item{value}{The value of the function \code{fun} at the added observations (vector of size "ite")}
+\item{nsteps}{The number of added observations (=ite).}
+\item{lastmodel}{The current (last) kriging model of \code{\link[DiceKriging]{km}} class.}
+\item{lastvalue}{The value of the criterion at the last added point.}
+\item{allvalues}{If an optimization on a discrete set of points is chosen, the value of the criterion at all these points, for the last iteration.}
 }
-%\references{}
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, accepted with minor revisions to the Journal of Statistics and Computing, \url{http://arxiv.org/abs/1009.5177}
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+
+Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
 }
 
 \author{
-Victor Picheny (Ecole Centrale Paris, France) 
+Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+
+Victor Picheny (CERFACS, Toulouse, France) 
 
 David Ginsbourger (IMSV, University of Bern, Switzerland) 
- 
-Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 }
-
-%\note{}
 
 \seealso{\code{\link{max_sur}}, \code{\link{max_timse}}, \code{\link{max_infill_criterion}}}
 
 \examples{
-####################################################################
-#a 8 points initial design  (a LHS in 2d)
-design.fact <- maximinLHS(8,k=2)		#dimension = 2
-design.fact <- data.frame(design.fact)
-names(design.fact) <- c ( "x1","x2")
-testfun <- camelback2			#our test function
+#EGI
 
-#the response
-response <- testfun(design.fact)
+set.seed(8)
+N <- 9 #number of observations
+T <- 80 #threshold
+testfun <- branin
+lower <- c(0,0)
+upper <- c(1,1)
 
-#the initial km model
-model <- km(formula=~., design = design.fact, response = response, covtype="matern5_2")
+#a 9 points initial design (LHS in 2 dimensions)
+design <- data.frame(maximinLHS(N,k=2))
+response <- testfun(design)
 
-#the integration points
-intpoints <- expand.grid(seq(0,1,length=20), seq(0,1,length=20))
+#km object with matern3_2 covariance (params estimated by ML from the observations)
+model <- km(formula=~., design = design, response = response,covtype="matern3_2")
 
-#the inversion threshold
-T <- 0
-
-#the number of iterations
+optimcontrol <- list(method="genoud",pop.size=50)
+integcontrol <- list(distrib="sur",n.points=50)
 iter <- 1
 
+obj1 <- EGI(T=T,model=model,method="sur",fun=testfun,iter=iter,
+           lower=lower,upper=upper,optimcontrol=optimcontrol,
+           integcontrol=integcontrol)
 
-#inversion
-res1  <- EGI(T=T,model=model,iter=iter,sampling.method="sur",
-lower=c(0,0),upper=c(1,1),fun=testfun,discrete.X=intpoints)
-res2  <- EGI(T=T,model=model,iter=iter,sampling.method="sur",
-lower=c(0,0),upper=c(1,1),fun=testfun)
-res3  <- EGI(T=T,model=model,iter=iter,sampling.method="timse",
-lower=c(0,0),upper=c(1,1),fun=testfun,discrete.X=intpoints)	
-res4  <- EGI(T=T,model=model,iter=iter,sampling.method="ranjan",
-lower=c(0,0),upper=c(1,1),fun=testfun,method.param=0.5)	
-res5  <- EGI(T=T,model=model,iter=iter,sampling.method="bichon",
-lower=c(0,0),upper=c(1,1),fun=testfun,method.param=0.5)	
+obj2 <- EGI(T=T,model=model,method="ranjan",fun=testfun,iter=iter,
+           lower=lower,upper=upper,optimcontrol=optimcontrol)
 
-#plot of the function on a 50 x 50 grid
-resolution <- 50
-s <- seq(0,1,,resolution)
-full_design <- expand.grid(s,s)
-resp <- testfun(full_design)
+\dontrun{
+par(mfrow=c(1,3))
+print_uncertainty_2d(model=model,T=T,main="probability of excursion",
+type="pn",new.points=0,cex.points=2)
 
-par(mfrow=c(1,1))
-contour(s,s,matrix(resp, nrow=resolution),20)
+print_uncertainty_2d(model=obj1$lastmodel,T=T,
+main="updated probability of excursion, sur sampling",
+type="pn",new.points=iter,col.points.end="red",cex.points=2)
 
-#initial points
-points(design.fact, col="black", pch=20, lwd=4)
+print_uncertainty_2d(model=obj2$lastmodel,T=T,
+main="updated probability of excursion, ranjan sampling",
+type="pn",new.points=iter,col.points.end="red",cex.points=2)
+}
+##############
+#same example with noisy initial observations and noisy new observations
+branin.noise <- function(x) return(branin(x)+rnorm(n=1,sd=30))
 
-#new points
-points(res1$par, col="red", pch=20, lwd=4)
-text( res1$par[,1],res1$par[,2], seq(1,nrow(res1$par)), pos=3)
+set.seed(8)
+N <- 9;T <- 80
+testfun <- branin.noise
+lower <- c(0,0);upper <- c(1,1)
 
-#new points
-points(res2$par, col="blue", pch=20, lwd=4)
-text( res2$par[,1],res2$par[,2], seq(1,nrow(res2$par)), pos=3)
+design <- data.frame(maximinLHS(N,k=2))
+response.noise <- apply(design,1,testfun)
+response.noise - response
 
-#new points
-points(res3$par, col="grey", pch=20, lwd=4)
-text( res3$par[,1],res3$par[,2], seq(1,nrow(res3$par)), pos=3)
 
-#new points
-points(res4$par, col="green", pch=20, lwd=4)
-text( res4$par[,1],res4$par[,2], seq(1,nrow(res4$par)), pos=3)
+model.noise <- km(formula=~., design = design, response = response.noise,
+covtype="matern3_2",noise.var=rep(30*30,times=N))
 
-#new points
-points(res5$par, col="purple", pch=20, lwd=4)
-text( res5$par[,1],res5$par[,2], seq(1,nrow(res5$par)), pos=3)
-##################################################################
-#same example with noisy initial observations and noisy new 
-#observations:
-
-#library("lhs")
-#a 8 points initial design  (a LHS in 2d)
-design.fact <- maximinLHS(8,k=2)		#dimension = 2
-design.fact <- data.frame(design.fact)
-names(design.fact) <- c ( "x1","x2")
-testfun <- camelback2			#our test function
-
-#the response
-response <- testfun(design.fact)+rnorm(n=8,mean=0,sd=0.25)
-
-#the noise variance vector
-noise.var <- rep(x=0.05,times=8)
-
-#the initial km model
-model <- km(formula=~1, design = design.fact, response = response,noise.var = noise.var )
-
-#the integration points
-intpoints <- expand.grid(seq(0,1,length=20), seq(0,1,length=20))
-
-#the inversion threshold
-T <- -1
-
-#the number of iterations
+optimcontrol <- list(method="genoud",pop.size=50)
+integcontrol <- list(distrib="sur",n.points=50)
 iter <- 1
 
-#the new observations variance
-new.var <- 0.01
+obj1 <- EGI(T=T,model=model.noise,method="sur",fun=testfun,iter=iter,
+           lower=lower,upper=upper,optimcontrol=optimcontrol,
+           integcontrol=integcontrol,new.noise.var=30*30)
 
-#EGI call
-res  <- EGI(T=T,model=model,iter=iter,sampling.method="timse",
-lower=c(0,0),upper=c(1,1),fun=testfun,discrete.X=intpoints,
-new.noise.var = new.var)
+obj2 <- EGI(T=T,model=model.noise,method="ranjan",fun=testfun,iter=iter,
+           lower=lower,upper=upper,optimcontrol=optimcontrol,
+            new.noise.var=30*30)
 
-#plot of the function on a 50 x 50 grid
-resolution <- 50
-s <- seq(0,1,,resolution)
-full_design <- expand.grid(s,s)
-resp <- testfun(full_design)
+\dontrun{
+par(mfrow=c(1,3))
+print_uncertainty_2d(model=model.noise,T=T,
+main="probability of excursion, noisy obs.",
+type="pn",new.points=0,cex.points=2)
 
-par(mfrow=c(1,1))
-contour(s,s,matrix(resp, nrow=resolution),20)
+print_uncertainty_2d(model=obj1$lastmodel,T=T,
+main="probability of excursion, sur sampling, noisy obs.",
+type="pn",new.points=iter,col.points.end="red",cex.points=2)
 
-#initial points
-points(design.fact, col="black", pch=20, lwd=4)
-
-#new points
-points(res$par, col="red", pch=20, lwd=4)
-text( res$par[,1],res$par[,2], seq(1,nrow(res$par)), pos=3)
-##################################################################
+print_uncertainty_2d(model=obj2$lastmodel,T=T,
+main="probability of excursion, ranjan sampling, noisy obs.",
+type="pn",new.points=iter,col.points.end="red",cex.points=2)
+}
 }

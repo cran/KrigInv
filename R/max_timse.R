@@ -1,91 +1,110 @@
-max_timse <- function(lower, upper, parinit=NULL, control=NULL, discrete.X=NULL, integration.points=NULL,
-                      T, epsilon=0, model, new.noise.var=0, type="UK"){
+
+max_timse <- function(lower, upper, optimcontrol=NULL, 
+		integration.param=NULL,T, model, new.noise.var=0,epsilon=0,imse=FALSE){
 	
+	if(is.null(integration.param)) integration.param <- integration_design(integcontrol=NULL,d=model@d,
+				lower=lower,upper=upper,model=model,T=T)
 	if(is.null(epsilon)) epsilon <- 0
+	integration.points <- as.matrix(integration.param$integration.points)
+	integration.weights <- integration.param$integration.weights
 	
-	if (is.null(discrete.X)){
-		d <- model@d
-		
-		# INTEGRATION POINTS
-		# case 0: integration points defined by user
-		
-		if (is.null(integration.points)){
-			# case 1: integration points generated using default values
-			n.int.points <- 100*d
-			integration.points <- maximinLHS(n.int.points, d, 100)
+	d <- model@d
+	if(is.null(optimcontrol$method)) optimcontrol$method<-"genoud"
+	
+	#precalculates the kriging mean and variance on the integration points
+	pred <- predict_nobias_km(object=model,newdata=integration.points,type="UK",se.compute=TRUE)
+	intpoints.oldmean<-pred$mean ; intpoints.oldsd<-pred$sd 
+	
+	#precompute other important data
+	precalc.data <- precomputeUpdateData(model,integration.points)
+	
+	# COMPUTE WEIGHT BEFORE OPTIMIZATION
+	if(!imse){
+		weight <- 1/sqrt(2*pi*(intpoints.oldsd^2+epsilon^2)) * exp(-0.5*((intpoints.oldmean-T)/sqrt(intpoints.oldsd^2+epsilon^2))^2)
+		weight[is.nan(weight)] <- 0
+	}else{
+		weight <- NULL
+	}
+	#end of precomputations
+	########################################################################################
+	#discrete Optimisation
+	if(optimcontrol$method=="discrete"){
+		if (is.null(optimcontrol$optim.points)){
+			n.discrete.points<-d*100
+			optimcontrol$optim.points <- lower + matrix(runif(d*n.discrete.points),ncol=d) * (upper - lower)
 		}
+		optim.points <- optimcontrol$optim.points
+		optim.points<-data.frame(optim.points)
+		all.crit <- seq(1,nrow(optim.points))
 		
-		else if (length(integration.points) == 1){
-			# case 2: number of integration points defined by user
-			n.int.points <- integration.points
-			integration.points <- maximinLHS(n.int.points, d, 100)
+		for (i in 1:nrow(optim.points)){
+			all.crit[i] <- timse_optim(x=t(optim.points[i,]), integration.points=integration.points,integration.weights=integration.weights,
+					intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+					precalc.data=precalc.data,
+					T=T, model=model, new.noise.var=new.noise.var,weight=weight)
 		}
+			
+		ibest <- which.min(all.crit)
+		o <- list(3)
+		o$par <- optim.points[ibest,]
+		o$value <- min(all.crit)
+		o$allvalues<-all.crit
 		
-		# default OPTIMIZATION PARAMETERS when they are not provided
-		if (is.null(control$pop.size))  control$pop.size <- 10
-		if (is.null(control$max.generations))  control$max.generations <- 10*d#100*d
-		if (is.null(control$wait.generations))  control$wait.generations <- 2
-		if (is.null(control$BFGSburnin)) control$BFGSburnin <- 0#10#0
-		if (is.null(parinit))  parinit <- lower + runif(d) * (upper - lower)
+		o$value <- as.matrix(o$value)
+		colnames(o$par) <- colnames(model@X)
+		colnames(o$value) <- colnames(model@y)   
+		return(list(par=o$par, value=o$value,allvalues=o$allvalues))
+	}
+	
+	########################################################################################
+	#Optimization with Genoud
+	if(optimcontrol$method=="genoud"){
+		if (is.null(optimcontrol$pop.size))  optimcontrol$pop.size <- 50*d#floor(4 + 3 * log(d))
+		if (is.null(optimcontrol$max.generations))  optimcontrol$max.generations <- 10*d#100*d
+		if (is.null(optimcontrol$wait.generations))  optimcontrol$wait.generations <- 2#2
+		if (is.null(optimcontrol$BFGSburnin)) optimcontrol$BFGSburnin <- 2#10#0
+		if (is.null(optimcontrol$parinit))  optimcontrol$parinit <- NULL
+		if (is.null(optimcontrol$unif.seed))  optimcontrol$unif.seed <- 1
+		if (is.null(optimcontrol$int.seed))  optimcontrol$int.seed <- 1
+		
+		#mutations
+		if (is.null(optimcontrol$P1)) optimcontrol$P1<-0#50		#copy
+		if (is.null(optimcontrol$P2)) optimcontrol$P2<-0#50
+		if (is.null(optimcontrol$P3)) optimcontrol$P3<-0#50
+		if (is.null(optimcontrol$P4)) optimcontrol$P4<-0#50
+		if (is.null(optimcontrol$P5)) optimcontrol$P5<-50
+		if (is.null(optimcontrol$P6)) optimcontrol$P6<-50#50
+		if (is.null(optimcontrol$P7)) optimcontrol$P7<-50
+		if (is.null(optimcontrol$P8)) optimcontrol$P8<-50
+		if (is.null(optimcontrol$P9)) optimcontrol$P9<-0
 		
 		domaine <- cbind(lower, upper)
 		
-		# COMPUTE WEIGHT BEFORE OPTIMIZATION
-		krig  <- predict.km(model, newdata=as.data.frame(integration.points), type)
-		mk <- krig$mean
-		sk    <- krig$sd
-		weight <- 1/sqrt(2*pi*(sk^2+epsilon^2))*exp(-0.5*((mk-T)/sqrt(sk^2+epsilon^2))^2)
-		weight[is.nan(weight)] <- 0
-
-		
-		# OPTIMIZATION
-		o <- genoud(fn=timse_optim, nvars=d, max=FALSE, pop.size=control$pop.size,
-				max.generations=control$max.generations,
-				wait.generations=control$wait.generations,
-				hard.generation.limit=TRUE, starting.values=parinit, MemoryMatrix=TRUE,
-				Domains=domaine, default.domains=10, solution.tolerance=0.01,
-				#gr=gr,
+		o <- genoud(fn=timse_optim, nvars=d, max=FALSE, pop.size=optimcontrol$pop.size,
+				max.generations=optimcontrol$max.generations,wait.generations=optimcontrol$wait.generations,
+				hard.generation.limit=TRUE, starting.values=optimcontrol$parinit, MemoryMatrix=TRUE,
+				Domains=domaine, default.domains=10, solution.tolerance=0.000000001,
 				boundary.enforcement=2, lexical=FALSE, gradient.check=FALSE, BFGS=TRUE,
-				data.type.int=FALSE, hessian=TRUE, unif.seed=812821, int.seed=53058,
-				print.level=2, share.type=0, instance.number=0,
+				data.type.int=FALSE, hessian=FALSE, unif.seed=optimcontrol$unif.seed, 
+				int.seed=optimcontrol$int.seed,print.level=2, share.type=0, instance.number=0,
 				output.path="stdout", output.append=FALSE, project.path=NULL,
-				P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
-				P9mix=NULL, BFGSburnin=control$BFGSburnin,BFGSfn=NULL, BFGShelp=NULL,
+				P1=optimcontrol$P1, P2=optimcontrol$P2, P3=optimcontrol$P3, 
+				P4=optimcontrol$P4, P5=optimcontrol$P5, P6=optimcontrol$P6,
+				P7=optimcontrol$P7, P8=optimcontrol$P8, P9=optimcontrol$P9,
+				P9mix=NULL, BFGSburnin=optimcontrol$BFGSburnin,BFGSfn=NULL, BFGShelp=NULL,
 				cluster=FALSE, balance=FALSE, debug=FALSE,
-				model=model, weight=weight, integration.points=integration.points, 
-				new.noise.var=new.noise.var, type="SK")
-	}
-
-	else{
-		# COMPUTE WEIGHT BEFORE OPTIMIZATION
-		krig  <- predict.km(model, newdata=as.data.frame(discrete.X), type)
-		mk <- krig$mean
-		sk    <- krig$sd
+				model=model, T=T, integration.points=integration.points,
+				intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+				precalc.data=precalc.data,
+				integration.weights=integration.weights,new.noise.var=new.noise.var,
+				weight=weight)
+				#hessian=TRUE
 		
-		weight <- 1/sqrt(2*pi*(sk^2+epsilon^2))*exp(-0.5*((mk-T)/sqrt(sk^2+epsilon^2))^2)
-		weight[is.nan(weight)] <- 0
-
-		all.crit <- seq(1,nrow(discrete.X))
-		for (i in 1:nrow(discrete.X)){
-			all.crit[i] <- timse_optim(x=t(discrete.X[i,]), integration.points=discrete.X,
-			weight=weight, model=model, new.noise.var=new.noise.var, type=type)
-		}
-		
-		ibest <- which.min(all.crit)
-		o <- list(2)
-		o$par <- t(discrete.X[ibest,])
-		o$value <- min(all.crit)
-		
-		#scatterplot3d(discrete.X[,1],discrete.X[,2],all.crit)
-		#print("ibest")
-		#print(ibest)
-		#print(o$value)
-	}
-
-	o$par
-	o$par <- t(as.matrix(o$par))
-	colnames(o$par) <- colnames(model@X)
-	o$value <- as.matrix(o$value)
-	colnames(o$value) <- colnames(model@y)   
-	return(list(par=o$par, value=o$value)) 
+		o$par <- t(as.matrix(o$par))
+		colnames(o$par) <- colnames(model@X)
+		o$value <- as.matrix(o$value)
+		colnames(o$value) <- colnames(model@y)
+				
+		return(list(par=o$par, value=o$value)) 
+	}	
 }

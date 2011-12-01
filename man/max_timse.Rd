@@ -1,114 +1,114 @@
 \name{max_timse}
-\Rdversion{1.1}
+\Rdversion{1.2}
 \alias{max_timse}
 
-\title{ Minimizer of the targeted IMSE criterion}
+\title{ Minimizer of the IMSE or targeted IMSE criterion}
 
 \description{
-Minimization, based on the package rgenoud (or on exhaustive search on a discrete set), of the targeted IMSE criterion. If not provided, the integration points (for the IMSE evaluation) are generated before optimization by latin hypercube sampling. The default number of integration points is 100 times the dimension of the problem.}
+Minimization, based on the package rgenoud (or on exhaustive search on a discrete set), of the targeted imse (or imse) criterion.
+}
 
 \usage{
-max_timse(lower, upper, parinit=NULL, control=NULL, discrete.X=NULL, 
-integration.points=NULL, T, epsilon=0, model, new.noise.var=0, type="UK")
+max_timse(lower, upper, optimcontrol = NULL, 
+integration.param = NULL, T, model, 
+new.noise.var = 0, epsilon = 0, imse = FALSE)
 }
 
 \arguments{
-  \item{lower}{ vector containing the lower bounds of the variables to be optimized over }
-
-  \item{upper}{ vector containing the upper bounds of the variables to be optimized over }
-
-  \item{parinit}{ optional vector containing the initial values for the variables to be optimized over }
-
-   \item{control}{  optional list of control parameters for optimization. 
-One can control  \code{"pop.size"}  (default : [4+3*log(nb of variables)]),  \code{"max.generations"} (5),  
-\code{"wait.generations"} (2) and  \code{"BFGSburnin"} (0) of function  \code{"genoud"} (see \code{\link[rgenoud]{genoud}}). 
-Numbers into brackets are the default values }  
-
-  \item{T}{target value (a real number)} 
-
-  \item{epsilon}{ optional tolerance value (a real positive number); default value is 0.}
-
-  \item{model}{ An object of class \code{\link[DiceKriging]{km}} (Kriging model)}
-  
-  \item{type}{ Kriging type (string): "SK" or "UK" (default) }
-  
-  \item{new.noise.var}{ optional scalar value of the noise variance for the new observations }
-
-  \item{discrete.X}{ optional matrix of candidate points. If provided, the search for new observations is made on this discrete set instead of running the continuous optimisation, and it is also used as integration points }
-
-  \item{integration.points}{ optional scalar or matrix. If it is scalar, it defines the number of integration points, then generated as an LHS design; if it is a matrix, it defines the integration points directly.
- 					 If discrete.X is provided, this input is not taken into account.  }
-
+  \item{lower}{
+Vector containing the lower bounds of the design space.
 }
-
+  \item{upper}{
+Vector containing the upper bounds of the design space.
+}
+  \item{optimcontrol}{
+Optional list of control parameters for the optimization of the sampling criterion. The field \code{method} defines which optimization method is used: it can be either \code{"genoud"} (default) for an optimisation using the genoud algorithm, or \code{"discrete"} for an optimisation over a specified discrete set. 
+If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm: 
+\code{pop.size}  (default : 50*d),  \code{max.generations} (10*d), \code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
+If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly. 
+}
+  \item{integration.param}{
+Optional list of control parameter for the computation of integrals, containing the fields \code{integration.points}: a p*d matrix corresponding to p integrations points and \code{integration.weights}: a vector of size p corresponding to the weights of these integration points. 
+If nothing is specified, default values are used (see: function \code{\link{integration_design}} for more details). 
+}
+  \item{T}{
+Target value (scalar).
+}
+  \item{model}{
+A Kriging model of \code{\link[DiceKriging]{km}} class.
+}
+  \item{new.noise.var}{
+Optional scalar value of the noise variance of the new observation.
+}
+  \item{epsilon}{
+Optional tolerance value (a real positive number). Default value is 0.
+}
+  \item{imse}{
+Optional boolean to decide if the \code{"imse"} criterion should be used instead of \code{"timse"}. Default: \code{FALSE}.
+}
+}
 
 \value{A list with components:
 \item{par}{the best set of parameters found.}
-\item{value}{the value tIMSE at par.}
+\item{value}{the value of the criterion at par.}
+\item{allvalues}{if an optimization on a discrete set of points is chosen, the value of the criterion at all these points}
 }
+
 \references{
 Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of experiments for accurate approximation of a target region, J. Mech. Des. - July 2010 - Volume 132, Issue 7, http://dx.doi.org/10.1115/1.4001873
 
 Picheny V., Improving accuracy and compensating for uncertainty in surrogate modeling, Ph.D. thesis, University of Florida and Ecole Nationale Superieure des Mines de Saint-Etienne
-}
-\author{ 
-Victor Picheny 
 
-David Ginsbourger}
-%\note{}
+Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}  ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+}
+
+\author{
+Victor Picheny (CERFACS, Toulouse, France) 
+
+David Ginsbourger (IMSV, University of Bern, Switzerland) 
+ 
+Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+}
 
 \seealso{\code{\link{EGI}},\code{\link{timse_optim}}}
 
 \examples{
-#####################################################################
-#a 9-point full factorial initial design
-design.fact <- expand.grid(seq(0,1,length=3), seq(0,1,length=3))
+#max_timse
 
-design.fact <- data.frame(design.fact)
-names(design.fact) <- c ( "x1","x2")
-testfun <- camelback2			#our test function
+set.seed(8)
+N <- 9 #number of observations
+T <- 80 #threshold
+testfun <- branin
+lower <- c(0,0)
+upper <- c(1,1)
 
-#the response
-response <- testfun(design.fact)
+#a 9 points initial design (LHS in 2 dimensions)
+design <- data.frame(maximinLHS(N,k=2))
+response <- testfun(design)
 
-#the initial km model
-model <- km(formula=~., design = design.fact, response = response, 
-covtype="matern5_2")
+#km object with matern3_2 covariance (params estimated by ML from the observations)
+model <- km(formula=~., design = design, response = response,covtype="matern3_2")
 
-#the integration points
-n.grid <- 20
-x.grid <- y.grid <- seq(0,1,length=n.grid)
-design.grid <- expand.grid(x.grid, y.grid)
+optimcontrol <- list(method="genoud",pop.size=50)
+integcontrol <- list(distrib="timse",n.points=50)
+integration.param <- integration_design(integcontrol=integcontrol,d=2,
+                                            lower=lower,upper=upper,model=model,
+                                            T=T)
 
-#compute weight on the grid
-T <- 0
-epsilon <- 0.01
-krig  <- predict.km(model, newdata=as.data.frame(design.grid), "UK")
-mk <- krig$mean
-sk    <- krig$sd
-weight <- 1/sqrt(2*pi*(sk^2+epsilon^2))*exp(-0.5*((mk-T)/sqrt(sk^2+epsilon^2))^2)
-weight[is.nan(weight)] <- 0
+\dontrun{
+obj <- max_timse(lower=lower,upper=upper,optimcontrol=optimcontrol,T=T,
+                model=model,integration.param=integration.param)
 
-#evaluate criterion on the grid		
-timse.EI.grid <- apply(design.grid, 1, timse_optim, weight=weight, 
-model=model, integration.points=design.grid)
-z.grid <- matrix(timse.EI.grid, n.grid, n.grid)
+obj$par;obj$value #optimum in (0.4596538,0.8529196)
+new.model <- update_km(model=model,NewX=obj$par,NewY=testfun(obj$par),
+                       CovReEstimate=TRUE)
 
-#plots: contour of the criterion, doe points and new point
-contour(x.grid,y.grid,z.grid,25)
-points(design.fact, col="black", pch=20, lwd=4)
+par(mfrow=c(1,2))
+print_uncertainty(model=model,T=T,type="pn",lower=lower,upper=upper,
+cex.points=2.5,main="probability of excursion")
 
-#plots: contour of the actual function at threshold
-testfun.grid <- testfun(design.grid)
-z.grid.2 <- matrix(testfun.grid, n.grid, n.grid)
-contour(x.grid,y.grid,z.grid.2,levels=T,col="blue",add=TRUE)
-title("Contour lines of timse criterion (black) and of f(x)=T (blue)")
-
-#search best point with Genoud
-opt <- max_timse(lower=c(0,0), upper=c(1,1), T=T, epsilon=epsilon, 
-model=model, integration.points=design.grid)
-points(opt$par, col="blue", pch=20, lwd=4)
-
-                      
-#####################################################################
+print_uncertainty(model=new.model,T=T,type="pn",lower=lower,upper=upper,
+new.points=1,col.points.end="red",cex.points=2.5,
+main="updated probability of excursion")
+}
 }

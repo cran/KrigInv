@@ -1,5 +1,5 @@
 \name{fun_test2d_ranjan}
-\Rdversion{1.1}
+\Rdversion{1.2}
 \alias{fun_test2d_ranjan}
 
 \title{ 2-dimensional test function "fun_test2d_ranjan" }
@@ -14,17 +14,10 @@ fun_test2d_ranjan(x)
 
 \arguments{
   \item{x}{2-dimensional input (or matrix which lines or such inputs)}
-  }
-%\details{}
+}
+
 \value{Image of x by fun_test2d_ranjan}
 \references{Ranjan, P., Bingham, D., Michailidis, G.: Sequential experiment design for contour estimation from complex computer codes. Technometrics 50(4), 527-541 (2008)}
 \author{ David Ginsbourger (Neuchatel University, Stochastic Hydrogeology Group) }
-%\note{}
 
-%\seealso{}
-
-%\examples{}
-
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory. 
 \keyword{internal}

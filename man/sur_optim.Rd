@@ -1,82 +1,112 @@
 \name{sur_optim}
-\Rdversion{1.1}
+\Rdversion{1.2}
 \alias{sur_optim}
 
-\title{ SUR criterion }
-
+\title{ sur criterion }
 \description{
-Evaluation of the SUR criterion for a candidate point. To be used in optimization routines, like in max.sur. The new point is added to the design of experiments only if it is not too close to an existing observation, or if there is some observation noise. The criterion is the integral of the posterior probability of misclassification.}
-
+Evaluation of the \code{"sur"} criterion for a candidate point. To be used in optimization routines, like in \code{\link{max_sur}}. 
+To avoid numerical instabilities, the new point is evaluated only if it is not too close to an existing observation, or if there is some observation noise. 
+The criterion is the integral of the posterior sur uncertainty.
+}
 \usage{
-sur_optim(x, y.integration=NULL, integration.points, model, T, 
-new.noise.var=0, type="UK")
+sur_optim(x, integration.points, integration.weights = NULL, 
+intpoints.oldmean, intpoints.oldsd, 
+precalc.data, model, T, 
+new.noise.var = NULL,current.sur=1e6)
 }
 
 \arguments{
-  \item{x}{ the input vector at which one wants to evaluate the criterion }
-  \item{T}{ the targeted (scalar) output value } 
-  \item{y.integration}{ the vector of integration points in the y space; if not provided, 10 points using importance sampling are used} 
-  \item{model}{ An object of class \code{\link[DiceKriging]{km}} (Kriging model)}
-  \item{type}{ Kriging type (string): "SK" or "UK" (default) }
-  \item{integration.points}{ Matrix of points for numerical integration in the X space}
-  \item{new.noise.var}{ optional scalar value of the noise variance for the new observation (default value is 0)}
+  	\item{x}{Input vector of size d at which one wants to evaluate the criterion.}
+  	\item{integration.points}{p*d matrix of points for numerical integration in the X space.}
+	\item{integration.weights}{Vector of size p corresponding to the weights of these integration points.}
+	\item{intpoints.oldmean}{Vector of size p corresponding to the kriging mean at the integration points before adding \code{x} to the design of experiments.}
+	\item{intpoints.oldsd}{Vector of size p corresponding to the kriging standard deviation at the integration points before adding \code{x} to the design of experiments.}
+	\item{precalc.data}{List containing useful data to compute quickly the updated kriging variance. This list can be generated using the \code{\link{precomputeUpdateData}} function.}
+ 	\item{model}{Object of class \code{\link[DiceKriging]{km}} (Kriging model).}
+	\item{T}{Target value (scalar)}
+	\item{new.noise.var}{Optional scalar value of the noise variance for the new observations.}
+  \item{current.sur}{Arbitrary value given to the \code{"sur"} criterion for candidate points that are too close to existing observations. This argument applies only if the noise variance is zero.}
+
 }
-%\details{}
-\value{SUR value}
+
+\value{
+sur value
+}
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, accepted with minor revisions to the Journal of Statistics and Computing, \url{http://arxiv.org/abs/1009.5177}
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 
-Vazquez, E., Bect, J.: A sequential Bayesian algorithm to estimate a probability of failure. In: Proceedings of the 15th IFAC Symposium on System Identification, (SYSID 2009), Saint-Malo, France (2009)}
-\author{ 
-Victor Picheny
+Vazquez, E., Bect, J.: A sequential Bayesian algorithm to estimate a probability of failure. In: Proceedings of the 15th IFAC Symposium on System Identification, (SYSID 2009), Saint-Malo, France (2009)
 
-David Ginsbourger }
-%\note{}
+Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set},   ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+}
+\author{
+Victor Picheny (CERFACS, Toulouse, France) 
+
+David Ginsbourger (IMSV, University of Bern, Switzerland) 
+ 
+Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+}
 
 \seealso{\code{\link{EGI}}, \code{\link{max_sur}}}
 
 \examples{
-#####################################################################
-#a 9-point full factorial initial design
-design.fact <- expand.grid(seq(0,1,length=3), seq(0,1,length=3))
+#sur_optim
 
-design.fact <- data.frame(design.fact)
-names(design.fact) <- c ( "x1","x2")
-testfun <- camelback2			#our test function
+set.seed(8)
+N <- 9 #number of observations
+T <- 80 #threshold
+testfun <- branin
 
-#the response
-response <- testfun(design.fact)
+#a 9 points initial design (LHS in 2 dimensions)
+design <- data.frame(maximinLHS(N,k=2))
+response <- testfun(design)
 
-#the initial km model
-model <- km(formula=~., design = design.fact, response = response, 
-covtype="matern5_2")
+#km object with matern3_2 covariance (params estimated by ML from the observations)
+model <- km(formula=~., design = design, response = response,covtype="matern3_2")
 
-#the integration points
-n.grid <- 20
+###we need to compute some additional arguments:
+#integration points, and current kriging means and variances at these points
+integcontrol <- list(n.points=50,distrib="sur")
+obj <- integration_design(integcontrol=integcontrol,lower=c(0,0),upper=c(1,1),
+model=model,T=T)
+
+integration.points <- obj$integration.points
+integration.weights <- obj$integration.weights
+pred <- predict_nobias_km(object=model,newdata=integration.points,
+type="UK",se.compute=TRUE)
+
+intpoints.oldmean <- pred$mean ; intpoints.oldsd<-pred$sd
+
+#another precomputation
+precalc.data <- precomputeUpdateData(model,integration.points)
+
+
+x <- c(0.5,0.4)#one evaluation of the sur criterion
+sur_optim(x=x,integration.points=integration.points,
+         integration.weights=integration.weights,
+         intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+         precalc.data=precalc.data,T=T,model=model)#return 0.09031263
+
+n.grid <- 20 #you can run it with 100
 x.grid <- y.grid <- seq(0,1,length=n.grid)
-design.grid <- expand.grid(x.grid, y.grid)
-
-#evaluate criterion on the grid
-T <- 0
-		
-sur.grid <- apply(design.grid, 1, sur_optim, T=T, model=model, 
-integration.points=design.grid)
+x <- expand.grid(x.grid, y.grid)
+sur.grid <- apply(X=x,FUN=sur_optim,MARGIN=1,integration.points=integration.points,
+         integration.weights=integration.weights,
+         intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+         precalc.data=precalc.data,T=T,model=model)#takes ~15seconds to run
 z.grid <- matrix(sur.grid, n.grid, n.grid)
 
 #plots: contour of the criterion, doe points and new point
-contour(x.grid,y.grid,z.grid,25)
-points(design.fact, col="black", pch=20, lwd=4)
+image(x=x.grid,y=y.grid,z=z.grid,col=grey.colors(10))
+contour(x=x.grid,y=y.grid,z=z.grid,15,add=TRUE)
+points(design, col="black", pch=17, lwd=4,cex=2)
 
 i.best <- which.min(sur.grid)
-points(design.grid[i.best,], col="blue", pch=20, lwd=4)
+points(x[i.best,], col="blue", pch=17, lwd=4,cex=3)
 
-#plots: contour of the actual function at threshold
-testfun.grid <- testfun(design.grid)
+#plots the real (unknown in practice) curve f(x)=T
+testfun.grid <- apply(x,1,testfun)
 z.grid.2 <- matrix(testfun.grid, n.grid, n.grid)
-contour(x.grid,y.grid,z.grid.2,levels=T,col="blue",add=TRUE)
+contour(x.grid,y.grid,z.grid.2,levels=T,col="blue",add=TRUE,lwd=5)
 title("Contour lines of sur criterion (black) and of f(x)=T (blue)")
-#####################################################################
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory. \keyword{}
-% \keyword{internal}

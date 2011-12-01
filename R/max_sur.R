@@ -1,80 +1,123 @@
-max_sur <- function(lower, upper, parinit=NULL, control=NULL, discrete.X=NULL, n.int.y=10, integration.points=NULL,
-                    T, model, new.noise.var=0, type="UK"){
-
-	# COMPUTE Y VALUES BEFORE OPTIMIZATION
-	y.temp <- seq(0,1-1/n.int.y,1/n.int.y)
-	y.temp <- .5/(n.int.y) + y.temp
-	y.integration <- qnorm(y.temp)
-
-	d <- model@d
-
-	if (is.null(discrete.X)){
-		# INTEGRATION POINTS
+ max_sur <- function(lower, upper, optimcontrol=NULL, 
+						integration.param=NULL,
+						T, model, new.noise.var=0, 
+						real.volume.variance=FALSE,real.volume.constant=FALSE){
+	
+	if(is.null(integration.param)) integration.param <- integration_design(integcontrol=NULL,d=model@d,
+														lower=lower,upper=upper,model=model,T=T)
+					
+	integration.points <- as.matrix(integration.param$integration.points) ; d <- model@d
+	integration.weights <- integration.param$integration.weights
+	if(is.null(optimcontrol$method)) optimcontrol$method <- "genoud"
+	
+	#precalculates the kriging mean and variance on the integration points
+	pred <- predict_nobias_km(object=model,newdata=integration.points,type="UK",se.compute=TRUE)
+	intpoints.oldmean<-pred$mean ; intpoints.oldsd<-pred$sd 
+	
+	#precompute other important data
+	precalc.data <- precomputeUpdateData(model,integration.points)
+	constant.result <- NULL
+	if(real.volume.variance && real.volume.constant){
+		#specific optionnal term for the Jn criterion, it's a constant that does not nead to be computed (only informative).
+    constant.result <- computeRealVolumeConstant(model,integration.points,integration.weights,T)
+	}
+	
+	if(real.volume.variance){
+    fun.optim <- jn_optim
+    current.sur <- 0
+	}
+	if(!real.volume.variance){
+    fun.optim <- sur_optim
+    pn <- pnorm((intpoints.oldmean-T)/intpoints.oldsd)
+    if(is.null(integration.weights)) current.sur <- mean(pn*(1-pn))
+    if(!is.null(integration.weights)) current.sur <- sum(integration.weights*pn*(1-pn))
+	}
+	########################################################################################
+	#discrete Optimisation
+	if(optimcontrol$method=="discrete"){
+		if (is.null(optimcontrol$optim.points)){
+			n.discrete.points<-d*100
+			optimcontrol$optim.points <- lower + matrix(runif(d*n.discrete.points),ncol=d) * (upper - lower)
+		}
+		optim.points <- optimcontrol$optim.points
+		optim.points <- data.frame(optim.points)
+		colnames(optim.points) <- colnames(model@X)
+		all.crit <- seq(1,nrow(optim.points))
 		
-		# case 0: integration points defined by user (nothing to do then)
-		
-		if (is.null(integration.points)){
-			# case 1: integration points generated using default values
-			#n.points.by.vertice <- round((100*d)^(1/d))
-			n.int.points <- 100*d
-			integration.points <- maximinLHS(n.int.points, d, 100)
+		#it would be possible to evaluate all the points simultaneously, with an increased speed
+		for (i in 1:nrow(optim.points)){
+			all.crit[i] <- fun.optim(x=t(optim.points[i,]), integration.points=integration.points,integration.weights=integration.weights,
+					intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+					precalc.data=precalc.data,
+					T=T, model=model, new.noise.var=new.noise.var,current.sur=current.sur)
 		}
 		
-		else if (length(integration.points) == 1){
-			# case 2: number of integration points defined by user
-			n.int.points <- integration.points
-			integration.points <- maximinLHS(n.int.points, d, 100)
-		}
+		if(real.volume.variance && real.volume.constant) all.crit <- all.crit + constant.result
+		
+		ibest <- which.min(all.crit)
+		o <- list(3)
+		o$par <- optim.points[ibest,]
+		o$value <- min(all.crit)
+		o$allvalues <- all.crit
+		
+		o$value <- as.matrix(o$value)
+		colnames(o$par) <- colnames(model@X)
+		colnames(o$value) <- colnames(model@y)   
+		return(list(par=o$par, value=o$value,allvalues=o$allvalues,variance.volume=constant.result))
+	}
 	
-		# default OPTIMIZATION PARAMETERS when they are not provided
-		if (is.null(control$pop.size))  control$pop.size <- 10#floor(4 + 3 * log(d))
-		if (is.null(control$max.generations))  control$max.generations <- 10*d#100*d
-		if (is.null(control$wait.generations))  control$wait.generations <- 10#2
-		if (is.null(control$BFGSburnin)) control$BFGSburnin <- 0#10#0
-		if (is.null(parinit))  parinit <- lower + runif(d) * (upper - lower)
-	
+	########################################################################################
+	#Optimization with Genoud
+	if(optimcontrol$method=="genoud"){
+		
+		#save environment here for the gradient calculation ?
+		
+		if (is.null(optimcontrol$pop.size))  optimcontrol$pop.size <- 50*d#floor(4 + 3 * log(d))
+		if (is.null(optimcontrol$max.generations))  optimcontrol$max.generations <- 10*d#100*d
+		if (is.null(optimcontrol$wait.generations))  optimcontrol$wait.generations <- 2#2
+		if (is.null(optimcontrol$BFGSburnin)) optimcontrol$BFGSburnin <- 2#10#0
+		if (is.null(optimcontrol$parinit))  optimcontrol$parinit <- NULL
+		if (is.null(optimcontrol$unif.seed))  optimcontrol$unif.seed <- 1
+		if (is.null(optimcontrol$int.seed))  optimcontrol$int.seed <- 1
+		
+		#mutations
+		if (is.null(optimcontrol$P1)) optimcontrol$P1<-0#50		#copy
+		if (is.null(optimcontrol$P2)) optimcontrol$P2<-0#50
+		if (is.null(optimcontrol$P3)) optimcontrol$P3<-0#50
+		if (is.null(optimcontrol$P4)) optimcontrol$P4<-0#50
+		if (is.null(optimcontrol$P5)) optimcontrol$P5<-50
+		if (is.null(optimcontrol$P6)) optimcontrol$P6<-50#50
+		if (is.null(optimcontrol$P7)) optimcontrol$P7<-50
+		if (is.null(optimcontrol$P8)) optimcontrol$P8<-50
+		if (is.null(optimcontrol$P9)) optimcontrol$P9<-0
+		
 		domaine <- cbind(lower, upper)
 		
-		# OPTIMIZATION
-		o <- genoud(fn=sur_optim, nvars=d, max=FALSE, pop.size=control$pop.size,
-			max.generations=control$max.generations,
-			wait.generations=control$wait.generations,
-	        hard.generation.limit=TRUE, starting.values=parinit, MemoryMatrix=TRUE,
-	        Domains=domaine, default.domains=10, solution.tolerance=0.01,
-	        #gr=gr,
-	        boundary.enforcement=2, lexical=FALSE, gradient.check=FALSE, BFGS=TRUE,
-	        data.type.int=FALSE, hessian=TRUE, unif.seed=812821, int.seed=53058,
-	        print.level=2, share.type=0, instance.number=0,
-	        output.path="stdout", output.append=FALSE, project.path=NULL,
-	        P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
-	        P9mix=NULL, BFGSburnin=control$BFGSburnin,BFGSfn=NULL, BFGShelp=NULL,
-	        cluster=FALSE, balance=FALSE, debug=FALSE,
-			model=model, T=T, y.integration=y.integration, integration.points=integration.points, 
-	        new.noise.var=new.noise.var, type="SK")
-	}
-
-	else{
-		all.crit <- seq(1,nrow(discrete.X))
+		o <- genoud(fn=fun.optim, nvars=d, max=FALSE, pop.size=optimcontrol$pop.size,
+				max.generations=optimcontrol$max.generations,wait.generations=optimcontrol$wait.generations,
+				hard.generation.limit=TRUE, starting.values=optimcontrol$parinit, MemoryMatrix=TRUE,
+				Domains=domaine, default.domains=10, solution.tolerance=0.000000001,
+				boundary.enforcement=2, lexical=FALSE, gradient.check=FALSE, BFGS=TRUE,
+				data.type.int=FALSE, hessian=FALSE, unif.seed=optimcontrol$unif.seed, 
+				int.seed=optimcontrol$int.seed,print.level=1, share.type=0, instance.number=0,
+				output.path="stdout", output.append=FALSE, project.path=NULL,
+				P1=optimcontrol$P1, P2=optimcontrol$P2, P3=optimcontrol$P3, 
+				P4=optimcontrol$P4, P5=optimcontrol$P5, P6=optimcontrol$P6,
+				P7=optimcontrol$P7, P8=optimcontrol$P8, P9=optimcontrol$P9,
+				P9mix=NULL, BFGSburnin=optimcontrol$BFGSburnin,BFGSfn=NULL, BFGShelp=NULL,
+				cluster=FALSE, balance=FALSE, debug=FALSE,
+				model=model, T=T, integration.points=integration.points,
+				intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+				precalc.data=precalc.data,
+				integration.weights=integration.weights,new.noise.var=new.noise.var,current.sur=current.sur)#hessian=TRUE
 		
-		for (i in 1:nrow(discrete.X)){
-			all.crit[i] <- sur_optim(x=t(discrete.X[i,]), integration.points=discrete.X,
-			T=T, y.integration=y.integration, model=model, new.noise.var=new.noise.var, type="SK")
-		}
-
-		ibest <- which.min(all.crit)
-		o <- list(2)
-		o$par <- t(discrete.X[ibest,])
-		o$value <- min(all.crit)
-	
-		#scatterplot3d(discrete.X[,1],discrete.X[,2],all.crit)
-		#print("ibest")
-		#print(ibest)
-		#print(o$value)
-	}
-
-	o$par <- t(as.matrix(o$par))
-	colnames(o$par) <- colnames(model@X)
-	o$value <- as.matrix(o$value)
-	colnames(o$value) <- colnames(model@y)   
-	return(list(par=o$par, value=o$value)) 
+		o$par <- t(as.matrix(o$par))
+		colnames(o$par) <- colnames(model@X)
+		o$value <- as.matrix(o$value)
+		colnames(o$value) <- colnames(model@y)
+		
+		if(real.volume.variance && real.volume.constant) o$value <- o$value + constant.result
+		
+		return(list(par=o$par, value=o$value,variance.volume=constant.result))#,variance.volume=variance.volume)) 
+	}	
 }

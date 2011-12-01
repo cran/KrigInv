@@ -1,4 +1,4 @@
-update.km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FALSE,new.noise.var=NULL,kmcontrol=NULL){
+update_km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FALSE,new.noise.var=NULL,kmcontrol=NULL,F.newdata=NULL){
 
 	#model: a km object
 	#NewX: a matrix containing the new points of experiments
@@ -6,6 +6,8 @@ update.km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FA
 	#NewX_AllreadyExist: a boolean: do the NewX points allready exist in the design of experiment model@X ?
 	#CovReEstimate: a boolean: do you want to re-estimate the covariance parameters with the new observations ?
 	#new.noise.var: a vector containing the noise variance at each new observations
+	#F.newdata: an optional matrix containing the value of the trend at the new locations (to avoid a
+		#VERY expensive "model.matrix" call)
 	
 	#This function updates a km model in 3 possible different ways:
 		# - with new points and new responses WITH covariance parameters re-estimation
@@ -13,9 +15,10 @@ update.km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FA
 		# - with EXISTING points and modified responses for these points, with NO covariance parameters re-estimation
 		
 	if(NewX_AllreadyExist == FALSE){
-
-		model@X<-rbind(model@X, as.matrix(NewX))
-		model@y<-rbind(model@y, as.matrix(NewY))
+		#NewX <- matrix(NewX,ncol=model@d)
+		
+		model@X <- rbind(model@X, as.matrix(NewX))
+		model@y <- rbind(model@y, as.matrix(NewY))
 		
 		#Consistency tests between model@noise.var and new.noise.var
 		if ((length(model@noise.var) != 0) && (is.null(new.noise.var))) {
@@ -41,7 +44,7 @@ update.km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FA
 			#case 1: new points, covariance parameter re-estimation (provided model@param.estim == true)
 			if (model@param.estim) {
 				#case 1a: here we re-estimate the covariance parameter
-				#default values for the Theta estimation method when they are not provided
+				#default values for the cov param estimation parameters - when they are not provided
 				if (is.null(kmcontrol$penalty)) kmcontrol$penalty <- model@penalty
 				if (length(model@penalty==0)) kmcontrol$penalty <- NULL 
 				if (is.null(kmcontrol$optim.method)) kmcontrol$optim.method <- model@optim.method 
@@ -63,8 +66,11 @@ update.km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FA
 					
 				#solution 2	(faster)
 				model@n <- nrow(model@X)
-				model@F <- model.matrix(model@trend.formula, data=data.frame(model@X))
-				model <- computeAuxVariables(model)
+				#model@F <- model.matrix(model@trend.formula, data=data.frame(model@X))
+				if (is.null(F.newdata)) {model@F<-trendMatrix.update(model,Xnew=data.frame(NewX))
+				} else model@F<-rbind(model@F,F.newdata)
+				
+				model <- computeAuxVariables_update(model)
 			
 			}
 		}
@@ -77,9 +83,14 @@ update.km <- function(model, NewX,NewY,NewX_AllreadyExist=FALSE,CovReEstimate=FA
 			#			noise.var=model@noise.var)
 						
 			#solution 2	(faster)
+			
 			model@n <- nrow(model@X)
-			model@F <- model.matrix(model@trend.formula, data=data.frame(model@X))
-			model <- computeAuxVariables(model)
+			#model@F <- model.matrix(model@trend.formula, data=data.frame(model@X))
+			if (is.null(F.newdata)) {model@F<-trendMatrix.update(model,Xnew=data.frame(NewX))
+			} else model@F<-rbind(model@F,F.newdata)
+			
+			model <- computeAuxVariables_update(model)
+			
 		}
 	}
 	else{

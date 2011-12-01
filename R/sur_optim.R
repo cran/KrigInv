@@ -1,86 +1,41 @@
-sur_optim <- function(x, y.integration=NULL, integration.points, model, T, new.noise.var=0, type="UK"){
-
-	mindist <- dist(rbind(model@X[1,],t(x)))
+sur_optim <- function(x, integration.points,integration.weights=NULL,
+						intpoints.oldmean,intpoints.oldsd,precalc.data,
+						model, T, new.noise.var=NULL,current.sur=1e6){
 	
-	if (is.null(y.integration)){
-		n.int.y <- 10
-		y.temp <- seq(0,1-1/n.int.y,1/n.int.y)
-		y.temp <- .5/(n.int.y) + y.temp
-		y.integration <- qnorm(y.temp)
-    }
-	
-	integration.points <- as.matrix(integration.points)
+	#integration.points = NULL : remplir avec integration_param				
+					
+	tp1<-as.numeric(t(model@X))
+	tp2<-matrix(tp1-as.numeric(x),nrow=model@n,byrow=TRUE)^2
+	mindist<-min(sqrt(rowSums(tp2)))
 	if (!identical(colnames(integration.points), colnames(model@X))) colnames(integration.points) <- colnames(model@X)
-
 	
-	for (i in 1:model@n)  mindist <- min(mindist, dist(rbind(model@X[i,],t(x))))
-
-	if (mindist > 1e-4 || new.noise.var > 0){
-		# Compute simulated values of y.new
-		krig  <- predict.km(model, newdata=as.data.frame(t(x)), type)
-		mk <- krig$mean
-		sk <- krig$sd
-		y.new <- mk + sqrt(sk^2+new.noise.var)*y.integration
-		n.y <- length(y.new)
-		
-		# Update kriging with new point
+	if ( (mindist > 1e-5) || ( !is.null(new.noise.var)&&(new.noise.var!=0)  ) ){
 		X.new <- t(x)
-		ynew <- y.new[1]
-		model <- update.km(model=model,NewX=X.new,NewY=ynew,CovReEstimate=FALSE,new.noise.var=new.noise.var)
+		krig  <- predict_nobias_km(object=model, newdata=as.data.frame(X.new), 
+									type="UK",se.compute=TRUE, 
+									cov.compute=FALSE) 
 		
-		p.all <- seq(1,n.y)
+		mk <- krig$mean ; sk <- krig$sd ; newXvar <- sk*sk
+		F.newdata <- krig$F.newdata ; c.newdata <- krig$c
+		kn = computeQuickKrigcov(model,integration.points,X.new,precalc.data, F.newdata , c.newdata) 
 		
-		for (i in 1:n.y){
-			#modify the value of the last point
-			ynew <- y.new[i]
+		krig  <- predict_update_km (newXmean=mk,newXvar=newXvar,newXvalue=mk, 
+				newdata.oldmean=intpoints.oldmean,newdata.oldsd=intpoints.oldsd,kn=kn)
 			
-			#solution 1 (a bit slower)
-			#model <- update.km(model=model,NewX=model@X[model@n],NewY=ynew,NewX_AllreadyExist=TRUE,CovReEstimate=FALSE,new.noise.var=new.noise.var)
-			
-			#solution 2 (a bit faster because these are no full copy of the km object)
-			model@y[model@n] <- ynew
-			model@z <- as.numeric(backsolve(t(model@T), model@y-model@F%*%as.matrix(model@trend.coef), upper.tri=FALSE))
-
-			#calculation of mk and sk, the kriging mean an standard-dev
-			if (i==1){
-				#this call to predict.km is expensive. However we do it only once
-				krig  <- predict.km(model, newdata=as.data.frame(integration.points), type)
-				mk    <- krig$mean	
-				sk    <- krig$sd	#calculated only once
-				
-				Tinv.c.newdata=krig$Tinv.c	#save this matrix to accelerate the calculation of mk for the next values of i
-				F.newdata <- model.matrix(model@trend.formula, data=data.frame(integration.points))
-				y.predict.trend <- F.newdata%*%model@trend.coef		#save this array to accelerate the calculation of mk for the next values of i
-			}
-			else{
-				y.predict.complement <- t(Tinv.c.newdata)%*%model@z			#model@z has been updated in the update.km function
-				mk <- as.numeric(y.predict.trend + y.predict.complement)	#quick calculation of the kriging mean. And the kriging sd is unchanged !!!
-			}
-			
-			p.all[i] = mean(1 - pnorm(abs(T-mk), 0, sk))
-		}
-		crit <- mean(p.all)
-	}
-	else{
-		krig  <- predict.km(model, newdata=as.data.frame(integration.points), type)
-		mk    <- krig$mean
-		sk    <- krig$sd
-		p = 1 - pnorm(abs(T-mk), 0, sk)
-		crit <- mean(p)
-	}
+		sk.new <- krig$sd;lambda <- krig$lambda	
+		a <- (intpoints.oldmean-T) / sk.new
+		b <- lambda * sk / sk.new
+		
+		a[a==Inf]<- 1000 ;a[a== -Inf] <- 1000;b[b==Inf]<-0;b[b== -Inf]<-0
+		a[is.nan(a)] <- 1000; b[is.nan(b)]<-0
+		bsquare <- b*b
+		a.new <- as.numeric(a/sqrt(1+bsquare))
+		b.new <- as.numeric(-bsquare/(1+bsquare))
+		Phi.biv.a.b <- pbivnorm(a.new,-a.new,b.new)  #c.d.f of the bivariate gaussian distribution
+		
+		if (is.null(integration.weights)) {crit <- mean(Phi.biv.a.b)
+		}else crit <- sum(Phi.biv.a.b*integration.weights)
+	}else crit <- current.sur		
 	
 	return(crit)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

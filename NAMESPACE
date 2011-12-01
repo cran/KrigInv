@@ -1,6 +1,42 @@
 import("DiceKriging",
-	"rgenoud", "MASS", "lhs")
+	"rgenoud", "MASS", "lhs", "randtoolbox","DiceView")
 
-export(fundet, real_ind_fundet, fun_test2d_ranjan, EGI,
-bichon_optim, camelback2, lili2D, max_infill_criterion, max_sur, max_timse, ranjan_optim, sur_optim, tmse_optim, timse_optim)
+export(
+bichon_optim,
+camelback2,
+computeAuxVariables_noChol,
+computeAuxVariables_update,
+computeQuickKrigcov,
+computeRealVolumeConstant,
+EGI,
+EGIparallel,
+fun_test2d_ranjan,
+fundet,
+integration_design,
+jn_optim,
+lili2D,
+max_infill_criterion,
+max_sur,
+max_sur_parallel,
+max_timse,
+max_timse_parallel,
+precomputeUpdateData,
+predict_nobias_km,
+predict_update_km,
+predict_update_km_parallel,
+print_uncertainty,
+print_uncertainty_1d,
+print_uncertainty_2d,
+print_uncertainty_nd,
+ranjan_optim,
+sur_optim,
+sur_optim_parallel,
+sur_optim_parallel2,
+timse_optim,
+timse_optim_parallel,
+timse_optim_parallel2,
+tmse_optim,
+tsee_optim,
+update_km
+)
 
