@@ -1,5 +1,5 @@
 \name{max_sur}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{max_sur}
 
 \title{ Minimizer of the sur criterion}
@@ -62,7 +62,7 @@ Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential 
 
 Vazquez, E., Bect, J.: A sequential Bayesian algorithm to estimate a probability of failure. In: Proceedings of the 15th IFAC Symposium on System Identification, (SYSID 2009), Saint-Malo, France (2009)
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}  ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 }
 
 \author{
@@ -89,8 +89,10 @@ upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)
@@ -102,7 +104,7 @@ integration.param <- integration_design(integcontrol=integcontrol,d=2,
 obj <- max_sur(lower=lower,upper=upper,optimcontrol=optimcontrol,T=T,
                 model=model,integration.param=integration.param)
 
-obj$par;obj$value #optimum in (0.4550191,0.8614298)
+obj$par;obj$value
 new.model <- update_km(model=model,NewX=obj$par,NewY=testfun(obj$par),
                        CovReEstimate=TRUE)
 

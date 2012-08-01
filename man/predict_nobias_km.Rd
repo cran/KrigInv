@@ -1,5 +1,5 @@
 \name{predict_nobias_km}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{predict_nobias_km}
 
 \title{ Kriging predictions without any adjustment factor for the kriging variances }
@@ -39,8 +39,8 @@ No other arguments.
 
 \value{
   \item{mean }{ kriging mean (including the trend) computed at \code{newdata}. }
-  \item{sd }{ kriging standard deviation computed at \code{newdata}. Not computed if 
-              \code{se.compute=FALSE}. }
+  \item{sd }{ kriging standard deviation computed at \code{newdata}. 
+  Not computed if \code{se.compute=FALSE}. }
   \item{cov }{ kriging conditional covariance matrix. Not computed if \code{cov.compute=FALSE} (default).}
   \item{lower95, }{ }
   \item{upper95 }{ bounds of the 95 \% confidence interval computed at \code{newdata} (to be interpreted with special care when parameters are estimated, see description above). Not computed if \code{se.compute=FALSE}.}
@@ -97,8 +97,10 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 n.grid <- 100
 x.grid <- y.grid <- seq(0,1,length=n.grid)

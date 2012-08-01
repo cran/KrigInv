@@ -1,5 +1,5 @@
 \name{EGI}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{EGI}
 
 \title{
@@ -22,10 +22,11 @@ Target value (a real number). The sampling algorithm and the underlying kriging 
 A Kriging model of \code{\link[DiceKriging]{km}} class.
 }
   \item{method}{
-(String) Criterion used for choosing observations. Available criteria are \code{"ranjan"} (default) , \code{"bichon"}, \code{"tmse"}, \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"}.
+Criterion used for choosing observations. Available criteria are \code{"ranjan"} (default) , \code{"bichon"}, \code{"tmse"}, \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"}.
 }
   \item{method.param}{
-Optional tolerance value (scalar) for methods \code{"ranjan"}, \code{"bichon"}, \code{"tmse"} and \code{"timse"}. If not provided, default value is used (1 for ranjan and bichon, 0 for tmse and timse).
+Optional tolerance value (scalar) for methods \code{"ranjan"}, \code{"bichon"}, \cr
+\code{"tmse"} and \code{"timse"}. If not provided, default value is used (1 for ranjan and bichon, 0 for tmse and timse).
 }
   \item{fun}{
 Objective function.
@@ -45,7 +46,8 @@ Optional scalar value of the noise variance of the new observations.
   \item{optimcontrol}{
 Optional list of control parameters for the optimization of the sampling criterion. The field \code{method} defines which optimization method is used: it can be either \code{"genoud"} (default) for an optimisation using the genoud algorithm, or \code{"discrete"} for an optimisation over a specified discrete set. 
 If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm: 
-\code{pop.size}  (default : 50*d),  \code{max.generations} (10*d), \code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
+\code{pop.size}  (default : 50*d),  \code{max.generations} (default : 10*d), \cr
+\code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
 If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly. 
 }
   \item{kmcontrol}{
@@ -53,7 +55,7 @@ Optional list representing the control variables for the re-estimation of the kr
 The items are the same as in \code{\link[DiceKriging]{km}}.
 }
   \item{integcontrol}{
-Optional list specifying the procedure to build the integration points and weights, relevant only for the sampling criteria based on numerical integration: 
+Optional list specifying the procedure to build the integration points and weights, relevant only for the sampling criteria based on numerical integration: \cr
 (\code{"imse"}, \code{"timse"}, \code{"sur"} or \code{"jn"}). Many options are possible.
 A) If nothing is specified, 100*d points are chosen using the Sobol sequence. 
 B) One can directly set the field \code{integration.points} (a p * d matrix) for prespecified integration points. In this case these integration points and the corresponding vector \code{integration.weights} will be used for all the iterations of the algorithm. 
@@ -63,7 +65,8 @@ In that case one can control the number of integration points \code{n.points} (d
 C.1) The choice \code{"sobol"} corresponds to integration points chosen with the Sobol sequence in dimension d (uniform weight). 
 C.2) The choice \code{"MC"} corresponds to points chosen randomly, uniformly on the domain. 
 C.3) The choices \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"} correspond to importance sampling distributions (unequal weights). It is strongly recommended to use the importance sampling distribution corresponding to the chosen sampling criterion. 
-When important sampling procedures are chosen, \code{n.points} points are chosen using importance sampling among a discrete set of \code{n.candidates} points (default: \code{n.points*10}) which are distributed according to a distribution \code{init.distrib} (default: \code{"sobol"}). Possible values for \code{init.distrib} are the space filling distributions \code{"sobol"} and \code{"MC"} or an user defined distribution \code{"spec"}. 
+When important sampling procedures are chosen, \code{n.points} points are chosen using importance sampling among a discrete set of \code{n.candidates} points (default: \code{n.points*10}) which are distributed according to a distribution \cr
+ \code{init.distrib} (default: \code{"sobol"}). Possible values for \code{init.distrib} are the space filling distributions \code{"sobol"} and \code{"MC"} or an user defined distribution \code{"spec"}. 
 The \code{"sobol"} and \code{"MC"} choices correspond to quasi random and random points in the domain. 
 If the \code{"spec"} value is chosen the user must fill in manually the field \code{init.distrib.spec} to specify himself a n.candidates * d matrix of points in dimension d.
 }
@@ -83,9 +86,12 @@ The function used to build the integration points and weights (based on the opti
 \item{allvalues}{If an optimization on a discrete set of points is chosen, the value of the criterion at all these points, for the last iteration.}
 }
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+Chevalier C., Picheny V., Ginsbourger D. (2012), \emph{The KrigInv package: An efficient and user-friendly R implementation of Kriging-based inversion algorithms} ,\cr
+\url{http://hal.archives-ouvertes.fr/hal-00713537/}
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
+
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 }
 
 \author{
@@ -112,8 +118,10 @@ upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)

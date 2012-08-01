@@ -1,5 +1,5 @@
 \name{fun_test2d_ranjan}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{fun_test2d_ranjan}
 
 \title{ 2-dimensional test function "fun_test2d_ranjan" }

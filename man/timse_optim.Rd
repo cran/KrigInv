@@ -1,5 +1,5 @@
 \name{timse_optim}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{timse_optim}
 
 \title{ Targeted IMSE criterion }
@@ -14,7 +14,7 @@ timse_optim(x, integration.points, integration.weights = NULL,
 intpoints.oldmean = NULL, intpoints.oldsd = NULL, 
 precalc.data, model, T, new.noise.var = 0, weight = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   	\item{x}{Input vector of size d at which one wants to evaluate the criterion.}
   	\item{integration.points}{p*d matrix of points for numerical integration in the X space.}
@@ -37,7 +37,7 @@ Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of ex
 
 Picheny V., Improving accuracy and compensating for uncertainty in surrogate modeling, Ph.D. thesis, University of Florida and Ecole Nationale Superieure des Mines de Saint-Etienne
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}  ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 }
 
 \author{
@@ -62,8 +62,10 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 ###we need to compute some additional arguments:
 #integration points, and current kriging means and variances at these points
@@ -90,7 +92,7 @@ x <- c(0.5,0.4)#one evaluation of the timse criterion
 timse_optim(x=x,integration.points=integration.points,
          integration.weights=integration.weights,
          intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
-         precalc.data=precalc.data,T=T,model=model,weight=weight)#return 6.42732
+         precalc.data=precalc.data,T=T,model=model,weight=weight)
 
 n.grid <- 20 #you can run it with 100
 x.grid <- y.grid <- seq(0,1,length=n.grid)
@@ -99,7 +101,7 @@ timse.grid <- apply(X=x,FUN=timse_optim,MARGIN=1,integration.points=integration.
          integration.weights=integration.weights,
          intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
          precalc.data=precalc.data,T=T,model=model,weight=weight)
-#takes ~9seconds to run
+
 z.grid <- matrix(timse.grid, n.grid, n.grid)
 
 #plots: contour of the criterion, doe points and new point

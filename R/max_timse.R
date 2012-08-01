@@ -31,7 +31,7 @@ max_timse <- function(lower, upper, optimcontrol=NULL,
 	if(optimcontrol$method=="discrete"){
 		if (is.null(optimcontrol$optim.points)){
 			n.discrete.points<-d*100
-			optimcontrol$optim.points <- lower + matrix(runif(d*n.discrete.points),ncol=d) * (upper - lower)
+			optimcontrol$optim.points <- t(lower + t(matrix(runif(d*n.discrete.points),ncol=d)) * (upper - lower))
 		}
 		optim.points <- optimcontrol$optim.points
 		optim.points<-data.frame(optim.points)
@@ -66,7 +66,8 @@ max_timse <- function(lower, upper, optimcontrol=NULL,
 		if (is.null(optimcontrol$parinit))  optimcontrol$parinit <- NULL
 		if (is.null(optimcontrol$unif.seed))  optimcontrol$unif.seed <- 1
 		if (is.null(optimcontrol$int.seed))  optimcontrol$int.seed <- 1
-		
+		if (is.null(optimcontrol$print.level))  optimcontrol$print.level <- 1
+    
 		#mutations
 		if (is.null(optimcontrol$P1)) optimcontrol$P1<-0#50		#copy
 		if (is.null(optimcontrol$P2)) optimcontrol$P2<-0#50
@@ -86,7 +87,7 @@ max_timse <- function(lower, upper, optimcontrol=NULL,
 				Domains=domaine, default.domains=10, solution.tolerance=0.000000001,
 				boundary.enforcement=2, lexical=FALSE, gradient.check=FALSE, BFGS=TRUE,
 				data.type.int=FALSE, hessian=FALSE, unif.seed=optimcontrol$unif.seed, 
-				int.seed=optimcontrol$int.seed,print.level=2, share.type=0, instance.number=0,
+				int.seed=optimcontrol$int.seed,print.level=optimcontrol$print.level, share.type=0, instance.number=0,
 				output.path="stdout", output.append=FALSE, project.path=NULL,
 				P1=optimcontrol$P1, P2=optimcontrol$P2, P3=optimcontrol$P3, 
 				P4=optimcontrol$P4, P5=optimcontrol$P5, P6=optimcontrol$P6,

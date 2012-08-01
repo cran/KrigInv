@@ -1,5 +1,5 @@
 \name{print_uncertainty_nd}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{print_uncertainty_nd}
 
 \title{
@@ -107,8 +107,10 @@ upper <- rep(1,times=3)
 design <- data.frame(maximinLHS(N,k=3))
 response <- apply(design,1,testfun)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 \dontrun{
 print_uncertainty_nd(model=model,T=T,main="average probability of excursion",type="pn",
@@ -117,6 +119,5 @@ print_uncertainty_nd(model=model,T=T,main="average probability of excursion",typ
 print_uncertainty_nd(model=model,T=T,main="maximum probability of excursion",type="pn",
                      option="max")
 
-#takes 40sec to run
 }
 }

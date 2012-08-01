@@ -1,5 +1,5 @@
 \name{predict_update_km}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{predict_update_km}
 
 \title{
@@ -43,9 +43,9 @@ Kriging covariances between the points \code{newdata} and \code{newX}. These cov
 }
 
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
 }
 
 \author{
@@ -65,8 +65,10 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 #points where we want to compute prediction (if a point new.x is added to the doe)
 n.grid <- 20 #you can run it with 100

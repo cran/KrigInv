@@ -1,4 +1,4 @@
- max_sur_parallel <- function(lower, upper, optimcontrol=NULL, 
+ max_vorob_parallel <- function(lower, upper, optimcontrol=NULL, 
 		 				batchsize,
 						integration.param,
 						T, model, new.noise.var=0
@@ -9,21 +9,28 @@
   
 	integration.points <- as.matrix(integration.param$integration.points) ; d <- model@d
 	integration.weights <- integration.param$integration.weights
-	if(is.null(optimcontrol$method)) optimcontrol$method <- "genoud"
+  alpha <- integration.param$alpha
+	
+  if(is.null(optimcontrol$method)) optimcontrol$method <- "genoud"
 	
 	#precalculates the kriging mean and variance on the integration points
 	pred <- predict_nobias_km(object=model,newdata=integration.points,type="UK",se.compute=TRUE)
-	intpoints.oldmean <- pred$mean ; intpoints.oldsd <- pred$sd; pn <- pnorm((intpoints.oldmean-T)/intpoints.oldsd) 
-	if(is.null(integration.weights)) current.sur <- mean(pn*(1-pn))
-	if(!is.null(integration.weights)) current.sur <- sum(integration.weights*pn*(1-pn))
+	intpoints.oldmean <- pred$mean ; intpoints.oldsd <- pred$sd; pn <- pnorm((intpoints.oldmean-T)/intpoints.oldsd)
+  
+  if(is.null(alpha)) alpha <- vorob_threshold(pn)
+  pn_bigger_than_alpha <- (pn>alpha)+0
+  pn_lower_than_alpha <- 1-pn_bigger_than_alpha
+  
+	if(is.null(integration.weights)) current.vorob <- mean(pn*pn_lower_than_alpha + (1-pn)*pn_bigger_than_alpha)
+	if(!is.null(integration.weights)) current.vorob <- sum(integration.weights*(pn*pn_lower_than_alpha + (1-pn)*pn_bigger_than_alpha))
 	precalc.data <- precomputeUpdateData(model,integration.points)
 				
-	fun.optim <- sur_optim_parallel
+	fun.optim <- vorob_optim_parallel
 	########################################################################################
 	#discrete Optimisation
 	#batchsize optimizations in dimension d
 	if(optimcontrol$method=="discrete"){
-    
+		
 		if (is.null(optimcontrol$optim.points)){
 			n.discrete.points <- d*100
 			optimcontrol$optim.points <- t(lower + t(matrix(runif(d*n.discrete.points),ncol=d)) * (upper - lower))
@@ -32,13 +39,13 @@
 		optim.points <- optimcontrol$optim.points
 		optim.points <- data.frame(optim.points)
     
-    if(ncol(optim.points)==d){
-      #this is the standard case: 
-      fun.optim <- sur_optim_parallel2
+		if(ncol(optim.points)==d){
+		  #this is the standard case:
+		  fun.optim <- vorob_optim_parallel2
 		  colnames(optim.points) <- colnames(model@X)
 		  all.crit <- seq(1,nrow(optim.points))
 		  if(nrow(optim.points) < batchsize){
-			  print("error in max_sur.parallel")
+			  print("error in max_vorob_parallel")
 			  print("please set a batchsize lower or equal than the number of tested points optimcontrol$optim.points")
 		  }
 		
@@ -49,7 +56,7 @@
 				  all.crit[i] <- fun.optim(x=t(optim.points[i,]), integration.points=integration.points,integration.weights=integration.weights,
 					intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
 					precalc.data=precalc.data,T=T, model=model, new.noise.var=new.noise.var,
-					other.points=other.points,batchsize=j,current.sur=current.sur)
+					other.points=other.points,batchsize=j,alpha=alpha,current.vorob=current.vorob)
 			  }	
 			  ibest <- which.min(all.crit)
 			  other.points <- c(other.points,as.numeric(optim.points[ibest,]))					
@@ -60,24 +67,24 @@
 		  o$value <- min(all.crit); o$value <- as.matrix(o$value); colnames(o$value) <- colnames(model@y)
 		  o$allvalues <- all.crit
 		  return(list(par=o$par, value=o$value,allvalues=o$allvalues))
-    }else{
-      #new code (Aug 2012)
-      fun.optim <- sur_optim_parallel
-      all.crit <- seq(1,nrow(optim.points))
+		}else{
+		  #new code (Aug 2012)
+		  fun.optim <- vorob_optim_parallel2
+		  all.crit <- seq(1,nrow(optim.points))
       
-      for (i in 1:nrow(optim.points)){
-        all.crit[i] <- fun.optim(x=t(optim.points[i,]), integration.points=integration.points,integration.weights=integration.weights,
-                                 intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
-                                 precalc.data=precalc.data,T=T, model=model, new.noise.var=new.noise.var,
-                                 batchsize=batchsize,current.sur=current.sur)
-      }	
-      ibest <- which.min(all.crit)
-      o <- list(3)
-      o$par <- t(matrix(optim.points[ibest,],nrow=d,ncol=batchsize)); colnames(o$par) <- colnames(model@X)
-      o$value <- all.crit[ibest]; o$value <- as.matrix(o$value); colnames(o$value) <- colnames(model@y)
-      o$allvalues <- all.crit
-      return(list(par=o$par, value=o$value,allvalues=o$allvalues))
-    }
+		  for (i in 1:nrow(optim.points)){
+		    all.crit[i] <- fun.optim(x=t(optim.points[i,]), integration.points=integration.points,integration.weights=integration.weights,
+		                             intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
+		                             precalc.data=precalc.data,T=T, model=model, new.noise.var=new.noise.var,
+		                             batchsize=batchsize,alpha=alpha,current.vorob=current.vorob)
+		  }
+		  ibest <- which.min(all.crit)
+		  o <- list(3)
+		  o$par <- t(matrix(optim.points[ibest,],nrow=d,ncol=batchsize)); colnames(o$par) <- colnames(model@X)
+		  o$value <- all.crit[ibest]; o$value <- as.matrix(o$value); colnames(o$value) <- colnames(model@y)
+		  o$allvalues <- all.crit
+		  return(list(par=o$par, value=o$value,allvalues=o$allvalues))
+		}
 	}
 	
 	########################################################################################
@@ -124,13 +131,14 @@
 				model=model, T=T, integration.points=integration.points,
 				intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
 				precalc.data=precalc.data,integration.weights=integration.weights,
-				new.noise.var=new.noise.var,batchsize=batchsize,current.sur=current.sur)
+				new.noise.var=new.noise.var,batchsize=batchsize,alpha=alpha,
+        current.vorob=current.vorob)
 			
 			o$par <- t(matrix(o$par,nrow=d)); colnames(o$par) <- colnames(model@X)
 			o$value <- as.matrix(o$value); colnames(o$value) <- colnames(model@y)
 		}else{
 			#batchsize optimisations in dimension d
-			fun.optim <- sur_optim_parallel2
+			fun.optim <- vorob_optim_parallel2
 			domaine <- cbind(lower,upper)
 			other.points <- NULL
 			for (i in 1:batchsize){
@@ -151,7 +159,8 @@
 						model=model, T=T, integration.points=integration.points,
 						intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
 						precalc.data=precalc.data,integration.weights=integration.weights,
-						new.noise.var=new.noise.var,batchsize=i,current.sur=current.sur)
+						new.noise.var=new.noise.var,batchsize=i,current.vorob=current.vorob,
+            alpha=alpha)
         
         other.points <- c(other.points,as.numeric(o$par))
 			}

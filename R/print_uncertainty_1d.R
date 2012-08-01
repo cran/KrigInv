@@ -4,11 +4,12 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 			cex.points=1,cex.axis=1,pch.points.init=17,pch.points.end=17,
 			col.points.init="black",col.points.end="red",
 			xaxislab=NULL,yaxislab=NULL,xaxispoint=NULL,yaxispoint=NULL,xdecal=3,ydecal=3,
-      DiceViewplot=TRUE){
+      DiceViewplot=TRUE,vorobmean=FALSE){
 	
 	n <- model@n
 	initSize <- n -new.points
 	obs.X <- as.numeric(model@X)
+	alpha <- NULL
 	
 	s <- matrix(seq(from=lower,to=upper,length=resolution),ncol=1)
 	
@@ -32,6 +33,12 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 	else if(type=="imse"){
 		myvect <- (pred$sd)^2
 		obs.Y <- rep(0,times=n)
+	}else if(type=="vorob"){
+    alpha <- vorob_threshold(pn=pn)
+    pn_bigger_than_alpha <- (pn>alpha)+0
+    pn_lower_than_alpha <- 1-pn_bigger_than_alpha
+    myvect <- pn*pn_lower_than_alpha + (1-pn)*pn_bigger_than_alpha
+		obs.Y <- rep(0,times=n)  
 	}else{
 		print("unknown value for the type argument, we take type=pn")		
 		myvect <- pn
@@ -41,7 +48,7 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 	scale.x <- xscale[1] + seq(from=lower,to=upper,length=resolution) * (xscale[2]-xscale[1])
 	obs.X <- xscale[1] + obs.X * (xscale[2]-xscale[1])
 	axes <- is.null(xaxislab)
-	
+    
   if(DiceViewplot) par(mfrow=c(1,2))
   
 	plot(x = scale.x, y = myvect, type = "l", xlab = "", ylab = "",main=main,cex.axis=cex.axis,cex.main=cex.main,cex.lab=cex.lab,axes=axes,lwd=2)
@@ -60,6 +67,11 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 			indices <- c((initSize+1):n)
 			points(x=obs.X[indices],y=obs.Y[indices], col=col.points.end, pch=pch.points.end,cex=cex.points)	
 			}
+	}
+    
+	if(vorobmean){
+		if(is.null(alpha)) alpha <- vorob_threshold(pn=pn)
+		lines(scale.x,rep(alpha,times=resolution),col="blue",lty=2,lwd=3)
 	}
   
   if(DiceViewplot){

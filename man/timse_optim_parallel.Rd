@@ -1,5 +1,5 @@
 \name{timse_optim_parallel}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{timse_optim_parallel}
 
 \title{ Parallel targeted IMSE criterion }
@@ -15,7 +15,7 @@ intpoints.oldmean = NULL, intpoints.oldsd = NULL,
 precalc.data, model, T, new.noise.var = 0, weight = NULL,
 batchsize, current.timse)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   	\item{x}{Input vector of size d at which one wants to evaluate the criterion.}
   	\item{integration.points}{p*d matrix of points for numerical integration in the X space.}
@@ -40,18 +40,16 @@ Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of ex
 
 Picheny V., Improving accuracy and compensating for uncertainty in surrogate modeling, Ph.D. thesis, University of Florida and Ecole Nationale Superieure des Mines de Saint-Etienne
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 }
 
 \author{
 Victor Picheny (CERFACS, Toulouse, France) 
 
-David Ginsbourger (IMSV, University of Bern, Switzerland) 
- 
 Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 }
 
-\seealso{\code{\link{EGI}}, \code{\link{max_timse}}}
+\seealso{\code{\link{EGIparallel}}, \code{\link{max_timse_parallel}}}
 
 \examples{
 #timse_optim_parallel
@@ -65,8 +63,10 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 ###we need to compute some additional arguments:
 #integration points, and current kriging means and variances at these points
@@ -91,7 +91,7 @@ weight[is.nan(weight)] <- 0
 
 batchsize <- 4
 x <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)
-#one evaluation of the sur_optim_parallel criterion
+#one evaluation of the timse_optim_parallel criterion
 #we calculate the expectation of the future "timse" 
 #uncertainty when 4 points are added to the doe
 #the 4 points are (0.1,0.2) , (0.3,0.4), (0.5,0.6), (0.7,0.8)

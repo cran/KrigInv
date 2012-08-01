@@ -1,5 +1,5 @@
 \name{computeAuxVariables_update}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{computeAuxVariables_update}
 
 \title{
@@ -43,8 +43,10 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 model2 <- computeAuxVariables_update(model)
 #in this example model2 and model are the same!

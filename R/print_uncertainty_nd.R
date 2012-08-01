@@ -44,8 +44,12 @@ function(model,T,type="pn",lower=NULL,upper=NULL,
 	s.base <- s.base[,c(2,3)]
 	
 	prediction.points <- matrix(c(0),nrow=numrow,ncol=d)
+  if(type=="vorob"){
+    print("Vorob'ev plot not available in n dimensions.")
+    print("We switch to a pn plot.")
+    type <- "pn"
+  }
 
-  
 	par(mfrow=c(d-1,d-1))
 	for (d1 in 1:(d-1)){
 		for (d2 in 1:d){

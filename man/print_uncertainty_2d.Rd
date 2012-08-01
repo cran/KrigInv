@@ -1,5 +1,5 @@
 \name{print_uncertainty_2d}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{print_uncertainty_2d}
 
 \title{
@@ -21,7 +21,7 @@ cex.axis = 1, pch.points.init = 17, pch.points.end = 17,
 col.points.init = "black", col.points.end = "red", nlevels = 10, 
 levels = NULL, xaxislab = NULL, yaxislab = NULL, 
 xaxispoint = NULL, yaxispoint = NULL, xdecal = 3, ydecal = 3,
-krigmeanplot=FALSE)
+krigmeanplot=FALSE,vorobmean=FALSE)
 }
 
 \arguments{
@@ -34,7 +34,7 @@ Target value (scalar).
   \item{type}{
 Type of uncertainty that the user wants to print. 
 	Possible values are \code{"pn"}  (probability of excursion), or 
-	\code{"sur"}, \code{"imse"}, \code{"timse"} if we print a measure of uncertainty corresponding to one criterion.
+	\code{"sur"}, \code{"imse"}, \code{"timse"}, \code{"vorob"} if we print a measure of uncertainty corresponding to one criterion.
 }
   \item{lower}{
 Vector containing the lower bounds of the input domain.
@@ -121,6 +121,9 @@ Optional position shifting of the titles of the y axis.
 \item{krigmeanplot}{
 Optional boolean. When it is set to \code{FALSE} (default) the contour plot corresponds to the uncertainty selected. When it is set to \code{TRUE} the contour plot gives the kriging mean.
 }
+\item{vorobmean}{
+Optional boolean. When it is set to \code{TRUE} the Vorob'ev expectation is plotted. It corresponds to the averaged excursion set, using the definition of Vorob'ev.
+}
 }
 
 \value{
@@ -151,12 +154,16 @@ upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
-#par(mfrow=c(2,2)) #we run only one example here. others in comment
 print_uncertainty_2d(model=model,T=T,main="probability of excursion",
-type="pn",krigmeanplot=TRUE)
+                     type="pn",krigmeanplot=TRUE)
+
+#print_uncertainty_2d(model=model,T=T,main="vorob uncertainty",
+#type="vorob",krigmeanplot=FALSE)
 
 #print_uncertainty_2d(model=model,T=T,main="imse uncertainty",
 #type="imse",krigmeanplot=FALSE)
@@ -166,5 +173,8 @@ type="pn",krigmeanplot=TRUE)
 
 #print_uncertainty_2d(model=model,T=T,main="sur 
 #uncertainty",type="sur",krigmeanplot=FALSE)
+
+#print_uncertainty_2d(model=model,T=T,main="probability of excursion",
+#                     type="pn",krigmeanplot=TRUE,vorobmean=TRUE)
 
 }

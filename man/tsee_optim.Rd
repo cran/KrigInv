@@ -1,5 +1,5 @@
 \name{tsee_optim}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{tsee_optim}
 
 \title{ Two Sided Expected Exceedance criterion }
@@ -33,6 +33,7 @@ When the argument \code{x} is a p*d matrix the function returns a vector of size
 
 \author{
 Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+Yann Richet (IRSN, France)
 }
 \seealso{\code{\link{EGI}}, \code{\link{max_infill_criterion}}}
 
@@ -48,11 +49,13 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 x <- c(0.5,0.4)#one evaluation of the tsee criterion
-tsee_optim(x=x,T=T,model=model) #returns 1.20171
+tsee_optim(x=x,T=T,model=model)
 
 n.grid <- 20 #you can run it with 100
 x.grid <- y.grid <- seq(0,1,length=n.grid)

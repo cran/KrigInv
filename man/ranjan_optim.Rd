@@ -1,11 +1,11 @@
 \name{ranjan_optim}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{ranjan_optim}
 
 \title{ Ranjan et al.'s Expected Improvement criterion }
 
 \description{
-Evaluation of Bichon's Expected Feasibility criterion. To be used in optimization routines, like in \code{\link{max_infill_criterion}}.
+Evaluation of Ranjan's Expected Feasibility criterion. To be used in optimization routines, like in \code{\link{max_infill_criterion}}.
 }
 \usage{
 ranjan_optim(x, model, T, method.param = NULL)
@@ -62,11 +62,13 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 x <- c(0.5,0.4)#one evaluation of the ranjan criterion
-ranjan_optim(x=x,T=T,model=model) #returns 10.53682
+ranjan_optim(x=x,T=T,model=model)
 
 n.grid <- 20 #you can run it with 100
 x.grid <- y.grid <- seq(0,1,length=n.grid)

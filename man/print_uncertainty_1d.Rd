@@ -1,5 +1,5 @@
 \name{print_uncertainty_1d}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{print_uncertainty_1d}
 
 \title{
@@ -18,7 +18,7 @@ xscale = c(0, 1), show.points = TRUE, cex.main = 1, cex.lab = 1,
 cex.points = 1, cex.axis = 1, pch.points.init = 17, pch.points.end = 17, 
 col.points.init = "black", col.points.end = "red", xaxislab = NULL, 
 yaxislab = NULL, xaxispoint = NULL, yaxispoint = NULL, 
-xdecal = 3, ydecal = 3,DiceViewplot=TRUE)
+xdecal = 3, ydecal = 3,DiceViewplot=TRUE,vorobmean=FALSE)
 }
 
 \arguments{
@@ -31,7 +31,7 @@ Target value (scalar).
   \item{type}{
 Type of uncertainty that the user wants to print. 
 	Possible values are \code{"pn"} (probability of excursion), or 
-	\code{"sur"}, \code{"imse"}, \code{"timse"} if we print a measure of uncertainty corresponding to one criterion.
+	\code{"sur"}, \code{"imse"}, \code{"timse"}, \code{"vorob"} if we print a measure of uncertainty corresponding to one criterion.
 }
   \item{lower}{
 Lower bound for the input domain.
@@ -106,6 +106,9 @@ Optional position shifting of the titles of the y axis.
   \item{DiceViewplot}{
 Optional boolean. When it is set to \code{TRUE} (default) a second plot is added, generated with the DiceView package. This plot shows the kriging mean and confidence intervals on the whole input domain.
 }
+\item{vorobmean}{
+Optional boolean. When it is set to \code{TRUE} the Vorob'ev expectation is plotted. It corresponds to the averaged excursion set, using the definition of Vorob'ev. Here, the estimated set is the set above the Vorob'ev threshold (plotted in blue).
+}
 }
 
 \value{
@@ -136,11 +139,13 @@ upper <- c(1)
 design <- data.frame(maximinLHS(N,k=1))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 print_uncertainty_1d(DiceViewplot=TRUE,model=model,T=T,
-main="probability of excursion",cex.points=1.5,col.points.init="red")
+main="probability of excursion",cex.points=1.5,col.points.init="red",vorobmean=TRUE)
 
 
 }

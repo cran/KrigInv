@@ -4,8 +4,9 @@ function(model,T,type="pn",lower=c(0,0),upper=c(1,1),
 			ylab="",main="",xscale=c(0,1),yscale=c(0,1),show.points=TRUE,cex.main=1,cex.lab=1,
 			cex.contourlab=1,cex.points=1,cex.axis=1,pch.points.init=17,pch.points.end=17,
 			col.points.init="black",col.points.end="red",nlevels=10,levels=NULL,xaxislab=NULL,
-			yaxislab=NULL,xaxispoint=NULL,yaxispoint=NULL,xdecal=3,ydecal=3,krigmeanplot=FALSE){
+			yaxislab=NULL,xaxispoint=NULL,yaxispoint=NULL,xdecal=3,ydecal=3,krigmeanplot=FALSE,vorobmean=FALSE){
 	
+  alpha <- NULL
 	s1 <- seq(from=lower[1],to=upper[1],length=resolution)
 	s2 <- seq(from=lower[2],to=upper[2],length=resolution)
 	
@@ -25,6 +26,11 @@ function(model,T,type="pn",lower=c(0,0),upper=c(1,1),
 	}
 	else if(type=="imse"){
 		myvect <- (pred$sd)^2
+	}else if(type=="vorob"){
+	  alpha <- vorob_threshold(pn=pn)
+	  pn_bigger_than_alpha <- (pn>alpha)+0
+	  pn_lower_than_alpha <- 1-pn_bigger_than_alpha
+	  myvect <- pn*pn_lower_than_alpha + (1-pn)*pn_bigger_than_alpha
 	}else{
 		print("unknown value for the type argument, we take type=pn")		
 		myvect <- pn
@@ -52,6 +58,11 @@ function(model,T,type="pn",lower=c(0,0),upper=c(1,1),
 	} else {
 		contour(x=scale.x,y=scale.y,z=contourmatrix,add=TRUE,labcex=cex.contourlab,nlevels=nlevels)
 	}
+  if(vorobmean){
+    if(is.null(alpha)) alpha <- vorob_threshold(pn=pn)
+    pnmatrix <- matrix(pn, nrow=resolution,ncol=resolution)
+    contour(x=scale.x,y=scale.y,z=pnmatrix,add=TRUE,levels=c(alpha),lwd=5,col="blue",labcex=0.01)
+  }
 	if(show.points){
 		initialpoints <- model@X[1:(model@n-new.points),]
 		initialpoints[,1]<- xscale[1] + initialpoints[,1] * (xscale[2]-xscale[1])

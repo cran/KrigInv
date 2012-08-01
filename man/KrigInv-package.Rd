@@ -12,8 +12,8 @@ Sequential algorithms based on Kriging for computer experiments, meant to explor
 \tabular{ll}{
 Package: \tab KrigInv\cr
 Type: \tab Package\cr
-Version: \tab 1.2\cr
-Date: \tab 2011-12-01\cr
+Version: \tab 1.3\cr
+Date: \tab 2012-08-01\cr
 License: \tab GPL version 3\cr
 LazyLoad: \tab yes\cr
 }
@@ -50,11 +50,16 @@ Important function (key to all proposed methods):
 
 
 \references{
+Chevalier C., Picheny V., Ginsbourger D. (2012), \emph{The KrigInv package: An efficient and user-friendly R implementation of Kriging-based inversion algorithms} ,\cr
+\url{http://hal.archives-ouvertes.fr/hal-00713537/}
+
 Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}  ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 
-Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of experiments for accurate approximation of a target region, J. Mech. Des. - July 2010 - Volume 132, Issue 7, http://dx.doi.org/10.1115/1.4001873
+Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
+
+Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of experiments for accurate approximation of a target region, J. Mech. Des. - July 2010 - Volume 132, Issue 7, \url{http://dx.doi.org/10.1115/1.4001873}
 
 Picheny V., Improving accuracy and compensating for uncertainty in surrogate modeling, Ph.D. thesis, University of Florida and Ecole Nationale Superieure des Mines de Saint-Etienne
 

@@ -20,6 +20,7 @@ max_sur,
 max_sur_parallel,
 max_timse,
 max_timse_parallel,
+max_vorob_parallel,
 precomputeUpdateData,
 predict_nobias_km,
 predict_update_km,
@@ -37,6 +38,8 @@ timse_optim_parallel,
 timse_optim_parallel2,
 tmse_optim,
 tsee_optim,
-update_km
-)
+update_km,
+vorob_optim_parallel,
+vorob_optim_parallel2,
+vorob_threshold)
 

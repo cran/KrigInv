@@ -1,5 +1,5 @@
 \name{camelback2}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{camelback2}
 
 \title{ 2-dimensional test function "camelback2" }

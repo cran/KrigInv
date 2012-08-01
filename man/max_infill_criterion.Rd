@@ -1,7 +1,7 @@
 \name{max_infill_criterion}
 \alias{max_infill_criterion}
 \title{Optimizer for the infill criteria}
-\Rdversion{1.2}
+\Rdversion{1.3}
 
 \description{
 Global optimization, based on the package rgenoud (or on exhaustive search on a discrete set), of the chosen infill criterion (maximization or minimization, depending on the case)
@@ -47,7 +47,7 @@ Optional tolerance value (scalar). Default value is 1 for \code{"ranjan"} and \c
 \references{
 Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 
-Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of experiments for accurate approximation of a target region, J. Mech. Des. - July 2010 - Volume 132, Issue 7, http://dx.doi.org/10.1115/1.4001873
+Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of experiments for accurate approximation of a target region, J. Mech. Des. - July 2010 - Volume 132, Issue 7, \url{http://dx.doi.org/10.1115/1.4001873}
 
 Bichon, B.J., Eldred, M.S., Swiler, L.P., Mahadevan, S., McFarland, J.M.: Efficient global reliability analysis for nonlinear implicit performance functions. AIAA Journal 46 (10), 2459-2468 (2008)
 
@@ -75,15 +75,17 @@ upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 optimcontrol <- list(method="genoud",pop.size=50)
 
 obj <- max_infill_criterion(lower=lower,upper=upper,optimcontrol=optimcontrol,
                              method="bichon",T=T,model=model)
 
-obj$par;obj$value #optimum in (0,1)
+obj$par;obj$value
 new.model <- update_km(model=model,NewX=obj$par,testfun(obj$par),CovReEstimate=TRUE)
 
 \dontrun{

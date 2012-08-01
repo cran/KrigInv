@@ -1,5 +1,5 @@
 \name{sur_optim_parallel2}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{sur_optim_parallel2}
 
 \title{ Parallel sur criterion }
@@ -40,11 +40,9 @@ The last argument \code{current.sur} is used as a default value for the sur crit
 
 \value{Parallel sur value}
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 
-Vazquez, E., Bect, J.: A sequential Bayesian algorithm to estimate a probability of failure. In: Proceedings of the 15th IFAC Symposium on System Identification, (SYSID 2009), Saint-Malo, France (2009)
-
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set},   ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
 }
 
 \author{
@@ -65,8 +63,10 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 ###we need to compute some additional arguments:
 #integration points, and current kriging means and variances at these points
@@ -95,7 +95,6 @@ sur_optim_parallel2(x=x,other.points,integration.points=integration.points,
           intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
           precalc.data=precalc.data,T=T,model=model,
           batchsize=batchsize,current.sur=Inf)
-#return 0.05918768
 
 n.grid <- 20 #you can run it with 100
 x.grid <- y.grid <- seq(0,1,length=n.grid)
@@ -105,7 +104,7 @@ sur_parallel.grid <- apply(X=x,FUN=sur_optim_parallel2,MARGIN=1,other.points,
           integration.weights=integration.weights,
           intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
           precalc.data=precalc.data,T=T,model=model,
-          batchsize=batchsize,current.sur=Inf)#takes approx 20sec
+          batchsize=batchsize,current.sur=Inf)
 z.grid <- matrix(sur_parallel.grid, n.grid, n.grid)
 
 #plots: contour of the criterion, doe points and new point

@@ -1,5 +1,5 @@
 \name{fundet}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{fundet}
 
 \title{ 1-dimensional test function "fundet" }

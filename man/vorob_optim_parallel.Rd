@@ -1,18 +1,18 @@
-\name{sur_optim_parallel}
+\name{vorob_optim_parallel}
 \Rdversion{1.3}
-\alias{sur_optim_parallel}
+\alias{vorob_optim_parallel}
 
-\title{ Parallel sur criterion }
+\title{ Parallel Vorob'ev criterion }
 \description{
-Evaluation of the parallel sur criterion for some candidate points. To be used in optimization routines, like in \code{\link{max_sur_parallel}}. 
+Evaluation of the parallel Vorob'ev criterion for some candidate points. To be used in optimization routines, like in \code{\link{max_vorob_parallel}}. 
 To avoid numerical instabilities, the new points are evaluated only if they are not too close to an existing observation, or if there is some observation noise. 
-The criterion is the integral of the posterior sur uncertainty.
+The criterion is the integral of the posterior Vorob'ev uncertainty.
 }
 \usage{
-sur_optim_parallel(x, integration.points, integration.weights = NULL, 
+vorob_optim_parallel(x, integration.points, integration.weights = NULL, 
 intpoints.oldmean, intpoints.oldsd, 
 precalc.data, model, T, 
-new.noise.var = NULL, batchsize, current.sur)
+new.noise.var = NULL, batchsize, alpha, current.vorob)
 }
 
 \arguments{
@@ -26,28 +26,30 @@ new.noise.var = NULL, batchsize, current.sur)
 	\item{T}{Target value (scalar).}
   	\item{new.noise.var}{Optional scalar value of the noise variance for the new observations.}
   	\item{batchsize}{Number of points to sample simultaneously. The sampling criterion will return batchsize points at a time for sampling.}
-  	\item{current.sur}{Current value of the sur criterion (before adding new observations)}
+    \item{alpha}{The Vorob'ev threshold.}
+  	\item{current.vorob}{Current value of the vorob criterion (before adding new observations)}
 }
 \details{
 The first argument \code{x} has been chosen to be a vector of size batchsize*d (and not a matrix with batchsize rows and d columns) so that an optimizer like genoud can optimize it easily.
 For example if d=2, batchsize=3 and \code{x=c(0.1,0.2,0.3,0.4,0.5,0.6)}, we will evaluate the parallel criterion at the three points (0.1,0.2),(0.3,0.4) and (0.5,0.6).
-The last argument \code{current.sur} is used as a default value for the sur criterion when the new points \code{x} are too close to existing observations.
+The last argument \code{current.vorob} is used as a default value for the vorob criterion when the new points \code{x} are too close to existing observations.
 }
 
-\value{Parallel sur value}
+\value{Parallel vorob value}
 \references{
 Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 
 Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
 }
+
 \author{
 Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 }
 
-\seealso{\code{\link{EGIparallel}}, \code{\link{max_sur_parallel}} }
+\seealso{\code{\link{EGIparallel}}, \code{\link{max_vorob_parallel}} }
 
 \examples{
-#sur_optim_parallel
+#vorob_optim_parallel
 
 set.seed(8)
 N <- 9 #number of observations
@@ -65,12 +67,13 @@ model <- km(formula=~., design = design,
 
 ###we need to compute some additional arguments:
 #integration points, and current kriging means and variances at these points
-integcontrol <- list(n.points=50,distrib="sur")
+integcontrol <- list(n.points=50,distrib="vorob")
 obj <- integration_design(integcontrol=integcontrol,
 lower=c(0,0),upper=c(1,1),model=model,T=T)
 
 integration.points <- obj$integration.points
 integration.weights <- obj$integration.weights
+alpha <- obj$alpha
 pred <- predict_nobias_km(object=model,newdata=integration.points,
 type="UK",se.compute=TRUE)
 intpoints.oldmean <- pred$mean ; intpoints.oldsd<-pred$sd
@@ -80,17 +83,18 @@ precalc.data <- precomputeUpdateData(model,integration.points)
 
 batchsize <- 4
 x <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)
-#one evaluation of the sur_optim_parallel criterion
-#we calculate the expectation of the future "sur" uncertainty 
+#one evaluation of the vorob_optim_parallel criterion
+#we calculate the expectation of the future "vorob" uncertainty 
 #when 4 points are added to the doe
 #the 4 points are (0.1,0.2) , (0.3,0.4), (0.5,0.6), (0.7,0.8)
-sur_optim_parallel(x=x,integration.points=integration.points,
+vorob_optim_parallel(x=x,integration.points=integration.points,
           integration.weights=integration.weights,
           intpoints.oldmean=intpoints.oldmean,intpoints.oldsd=intpoints.oldsd,
           precalc.data=precalc.data,T=T,model=model,
-          batchsize=batchsize,current.sur=Inf)
+          batchsize=batchsize,alpha=alpha,current.vorob=Inf)
 
 
-#the function max_sur_parallel will help to find the optimum: 
+#the function max_vorob_parallel will help to find the optimum: 
 #ie: the batch of 4 minimizing the expectation of the future uncertainty
+
 }

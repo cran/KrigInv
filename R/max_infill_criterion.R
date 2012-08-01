@@ -16,12 +16,11 @@ max_infill_criterion <- function(lower, upper, optimcontrol=NULL, method, T, mod
 	if(optimcontrol$method == "discrete"){
 		if (is.null(optimcontrol$optim.points)){
 			n.discrete.points<-d*100
-			optimcontrol$optim.points <- lower + matrix(runif(d*n.discrete.points),ncol=d) * (upper - lower)
+			optimcontrol$optim.points <- t(lower + t(matrix(runif(d*n.discrete.points),ncol=d)) * (upper - lower))
 		}
 		optim.points <- optimcontrol$optim.points
-		optim.points<-data.frame(optim.points)
+		optim.points <- data.frame(optim.points)
 		
-		#x <- t(optim.points)
     x <- optim.points
     
 		#all the points are evaluated simultaneously in this case
@@ -42,7 +41,7 @@ max_infill_criterion <- function(lower, upper, optimcontrol=NULL, method, T, mod
 		if (is.null(optimcontrol$parinit))  optimcontrol$parinit <- NULL
 		if (is.null(optimcontrol$unif.seed))  optimcontrol$unif.seed <- 1
 		if (is.null(optimcontrol$int.seed))  optimcontrol$int.seed <- 1
-		if (is.null(optimcontrol$print.level))  optimcontrol$print.level <- 2
+		if (is.null(optimcontrol$print.level))  optimcontrol$print.level <- 1
 		
 		#mutations
 		if (is.null(optimcontrol$P1)) optimcontrol$P1<-0#50

@@ -1,5 +1,5 @@
 \name{integration_design}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{integration_design}
 
 \title{
@@ -7,7 +7,7 @@ Construction of a sample of integration points and weights
 }
 \description{
 Generic function to build integration points for some sampling criterion. 
-Available important sampling schemes are \code{"sur"}, \code{"jn"}, \code{"timse"} and \code{"imse"}. 
+Available important sampling schemes are \code{"sur"}, \code{"jn"}, \code{"timse"}, \code{"vorob"} and \code{"imse"}. 
 Each of them corresponds to a sampling criterion. 
 }
 \usage{
@@ -56,8 +56,14 @@ The important sampling aims at improving the accuracy of the calculation of nume
 \value{A list with components:
 \item{integration.points}{ p x d matrix of p points used for the numerical calculation of integrals}
 \item{integration.weights}{ a vector of size p corresponding to the weight of each point. If all the points are equally weighted, \code{integration.weights} is set to \code{NULL}}
+\item{alpha}{ if the \code{"vorob"} important sampling schemes is chosen, the function also returns a scalar, alpha, being the calculated Vorob'ev threshold}
 }
 \references{
+Chevalier C., Picheny V., Ginsbourger D. (2012), \emph{The KrigInv package: An efficient and user-friendly R implementation of Kriging-based inversion algorithms} ,
+\url{http://hal.archives-ouvertes.fr/hal-00713537/}
+
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
+
 Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 }
 
@@ -71,13 +77,15 @@ Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 #integration_design
 
 set.seed(8)
-#when nothing is specified: integration points are chosen with the sobol sequence
+#when nothing is specified: integration points 
+#are chosen with the sobol sequence
 integ.param <- integration_design(lower=c(0,0),upper=c(1,1))
 plot(integ.param$integration.points)
 
 #an example with pure random integration points
 integcontrol <- list(distrib="MC",n.points=50)
-integ.param <- integration_design(integcontrol=integcontrol,lower=c(0,0),upper=c(1,1))
+integ.param <- integration_design(integcontrol=integcontrol,
+		lower=c(0,0),upper=c(1,1))
 plot(integ.param$integration.points)
 
 #an example with important sampling distributions
@@ -89,14 +97,16 @@ N <- 14;testfun <- branin; T <- 80
 lower <- c(0,0);upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 integcontrol <- list(distrib="timse",n.points=200,n.candidates=5000)
-integ.param <- integration_design(integcontrol=integcontrol,lower=c(0,0),
-upper=c(1,1), model=model,T=T)
+integ.param <- integration_design(integcontrol=integcontrol,
+		lower=c(0,0),upper=c(1,1), model=model,T=T)
 
-print_uncertainty_2d(model=model,T=T,type="timse",col.points.init="red",
-cex.points=2,main="timse uncertainty and one sample of integration points")
+print_uncertainty_2d(model=model,T=T,type="timse",
+col.points.init="red",cex.points=2,
+main="timse uncertainty and one sample of integration points")
 
 points(integ.param$integration.points,pch=17,cex=1)
 

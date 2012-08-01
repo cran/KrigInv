@@ -1,5 +1,5 @@
 \name{print_uncertainty}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{print_uncertainty}
 
 \title{
@@ -24,10 +24,10 @@ Target value (scalar).
   \item{type}{
 Type of uncertainty that the user wants to print. 
 	Possible values are \code{"pn"} (probability of excursion), or 
-	\code{"sur"}, \code{"imse"}, \code{"timse"} if we print a measure of uncertainty corresponding to one criterion.
+	\code{"sur"}, \code{"imse"}, \code{"timse"}, \code{"vorob"} if we print a measure of uncertainty corresponding to one criterion.
 }
   \item{\dots}{
-Other arguments of the function \code{print_uncertainty_1d}, \code{print_uncertainty_2d} or \code{print_uncertainty_nd}.
+Other arguments of the function \code{print_uncertainty_1d}, \code{2d} or \code{nd}.
 }
 }
 
@@ -59,12 +59,17 @@ upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
-#par(mfrow=c(2,2)) #you could do many plots, but only one is run here
+#you could do many plots, but only one is run here
 print_uncertainty(model=model,T=T,main="probability of excursion",type="pn")
+#print_uncertainty(model=model,T=T,main="Vorob'ev uncertainty",type="vorob")
 #print_uncertainty(model=model,T=T,main="imse uncertainty",type="imse")
 #print_uncertainty(model=model,T=T,main="timse uncertainty",type="timse")
 #print_uncertainty(model=model,T=T,main="sur uncertainty",type="sur")
+#print_uncertainty(model=model,T=T,main="probability of excursion",type="pn",
+#vorobmean=TRUE)
 }

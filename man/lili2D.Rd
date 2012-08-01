@@ -1,5 +1,5 @@
 \name{lili2D}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{lili2D}
 
 \title{ 2-dimensional test function "lili2D" }

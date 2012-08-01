@@ -1,5 +1,5 @@
 \name{update_km}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{update_km}
 
 \title{Update of a kriging model}
@@ -40,9 +40,8 @@ Updated km object
 \references{
 Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}  ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
 }
-
 \author{ 
 Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 }
@@ -60,30 +59,14 @@ testfun <- branin
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 model@covariance
-
-#prints:
-#Covar. type  : matern3_2 
-#Covar. coeff.:
-#               Estimate
-#   theta(X1)     0.3332
-#   theta(X2)     0.5884
-#
-#Variance estimate: 8359.068
 
 new.x <- matrix(c(0.4,0.5),ncol=2)#the point that we are going to add in the km object
 new.y <- testfun(new.x)
 new.model <- update_km(model=model,NewX=new.x,NewY=new.y,CovReEstimate=TRUE)
 new.model@covariance
-
-#prints:
-#Covar. type  : matern3_2 
-#Covar. coeff.:
-#               Estimate
-#   theta(X1)     0.3904
-#   theta(X2)     0.6655
-#
-#Variance estimate: 9381.593
 }

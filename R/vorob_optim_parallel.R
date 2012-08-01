@@ -1,6 +1,6 @@
-sur_optim_parallel <- function(x, integration.points,integration.weights=NULL,
+vorob_optim_parallel <- function(x, integration.points,integration.weights=NULL,
 						intpoints.oldmean,intpoints.oldsd,precalc.data,
-						model, T, new.noise.var=NULL,batchsize,current.sur){
+						model, T, new.noise.var=NULL,batchsize,alpha,current.vorob){
 	
   
 	if(!is.null(new.noise.var)){
@@ -13,7 +13,7 @@ sur_optim_parallel <- function(x, integration.points,integration.weights=NULL,
 	n <- model@n
 	X.new <- matrix(x,nrow=d)
 	mindist <- Inf
-		
+	
 	tp1 <- c(as.numeric(t(model@X)),x)
 	for (i in 1:batchsize){
 		#distance between the i^th point and all other points (in the DOE or in the batch)
@@ -38,23 +38,28 @@ sur_optim_parallel <- function(x, integration.points,integration.weights=NULL,
 	
 		krig2  <- predict_update_km_parallel (newXmean=mk,newXvar=newXvar,newXvalue=mk, 
 				Sigma.r=Sigma.r,newdata.oldmean=intpoints.oldmean,newdata.oldsd=intpoints.oldsd,kn=kn)
-		if(!is.null(krig2$error)) return(current.sur)
-		
+		if(!is.null(krig2$error)) return(current.vorob)
 		sk.new <- krig2$sd	
-		a <- (intpoints.oldmean-T) / sk.new
-    c <- (intpoints.oldsd*intpoints.oldsd)/(sk.new*sk.new)
     
-	
+		a <- (intpoints.oldmean-T) / sk.new
 		a[a==Inf]<- 1000 ;a[a== -Inf] <- -1000;a[is.nan(a)] <- 1000
+		c <- (intpoints.oldsd*intpoints.oldsd)/(sk.new*sk.new)
 		c[c==Inf]<- 1000; c[is.nan(c)] <- 1000
     
-		a.new <- as.numeric(a/sqrt(c))
-		b.new <- -1*as.numeric((c-1)/c)
-		Phi.biv.a.b <- pbivnorm(a.new,-a.new,b.new)  #c.d.f of the bivariate gaussian distribution
+		arg1 <- as.numeric((intpoints.oldmean-T) / intpoints.oldsd)
+    arg2 <- as.numeric((qnorm(alpha) - a)/sqrt(c-1))
+    arg3 <- as.numeric(-sqrt(1-1/c))
+    
+    term1 <- pbivnorm(arg1,arg2,arg3) #c.d.f of the bivariate gaussian distribution
+		term2 <- pbivnorm(arg1,-arg2,-arg3)
+    term3 <- pnorm(-arg2)
+    
+    result <- term1 - term2 + term3
+
 	
-		if (is.null(integration.weights)) {crit <- mean(Phi.biv.a.b)
-		}else crit <- sum(Phi.biv.a.b*integration.weights)
-	}else crit <- current.sur + 0.01	
+		if (is.null(integration.weights)) {crit <- mean(result)
+		}else crit <- sum(result*integration.weights)
+	}else crit <- current.vorob + 0.01	
 	
 	return(crit)
 }

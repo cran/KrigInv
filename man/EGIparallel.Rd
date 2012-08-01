@@ -1,5 +1,5 @@
 \name{EGIparallel}
-\Rdversion{1.2}
+\Rdversion{1.3}
 \alias{EGIparallel}
 
 \title{
@@ -7,7 +7,7 @@ Efficient Global Inversion: Parallel version.
 }
 \description{
 Sequential sampling based on the optimization of a kriging-based criterion, with model update after each evaluation. 
-Similar to EGI, except that samples can be chosen in batches instead of one at a time. Two criteria are available for now.
+Similar to EGI, except that samples can be chosen in batches instead of one at a time. Three criteria are available for now.
 }
 \usage{
 EGIparallel(T, model, method = NULL, method.param=NULL, 
@@ -24,7 +24,7 @@ Target value (scalar). The sampling algorithm and the underlying kriging model a
 A Kriging model of \code{\link[DiceKriging]{km}} class.
 }
   \item{method}{
-Criterion used for choosing observations. The two sampling methods available in parallel version are \code{"sur"} and \code{"timse"}.
+Criterion used for choosing observations. The two sampling methods available in parallel version are \code{"sur"}, \code{"timse"} and \code{"vorob"}.
 }
   \item{method.param}{
 Optional tolerance value (a real number) for method \code{"timse"}.
@@ -50,7 +50,8 @@ Vector containing the upper bounds of the variables to be optimized over.
   \item{optimcontrol}{
 Optional list of control parameters for the optimization of the sampling criterion. The field \code{method} defines which optimization method is used: it can be either \code{"genoud"} (default) for an optimisation using the genoud algorithm, or \code{"discrete"} for an optimisation over a specified discrete set. 
 If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm: 
-\code{pop.size}  (default : 50*d),  \code{max.generations} (10*d), \code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
+\code{pop.size}  (default : 50*d),  \code{max.generations} (default : 10*d), \cr
+\code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
 If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly. 
 Finally, one can control the field {optim.option} in order to decide how to optimize the sampling criterion. 
 If \code{optim.option} is set to 2 (default), batchsize sequential optimizations in dimension d are performed to find the optimum.
@@ -62,7 +63,7 @@ The items are the same as in \code{\link[DiceKriging]{km}}.
 }
   \item{integcontrol}{
 Optional list specifying the procedure to build the integration points and weights. Many options are possible.
-A) If nothing is specified, 100*d points are chosen using the Sobol sequence. 
+A) If nothing is specified, 100*d points are chosen using the Sobol sequence. \cr
 B) One can directly set the field \code{integration.points} (a p * d matrix) for prespecified integration points. In this case these integration points and the corresponding vector \code{integration.weights} will be used for all the iterations of the algorithm. 
 C) If the field \code{integration.points} is not set then the integration points are renewed at each iteration. 
 In that case one can control the number of integration points \code{n.points} (default: 100*d) and a specific distribution \code{distrib}. Possible values for \code{distrib} are: 
@@ -70,7 +71,8 @@ In that case one can control the number of integration points \code{n.points} (d
 C.1) The choice \code{"sobol"} corresponds to integration points chosen with the Sobol sequence in dimension d (uniform weight). 
 C.2) The choice \code{"MC"} corresponds to points chosen randomly, uniformly on the domain. 
 C.3) The choices \code{"timse"}, \code{"imse"}, \code{"sur"} and \code{"jn"} correspond to importance sampling distributions (unequal weights). It is strongly recommended to use the importance sampling distribution corresponding to the chosen sampling criterion. 
-When important sampling procedures are chosen, \code{n.points} points are chosen using importance sampling among a discrete set of \code{n.candidates} points (default: \code{n.points*10}) which are distributed according to a distribution \code{init.distrib} (default: \code{"sobol"}). Possible values for \code{init.distrib} are the space filling distributions \code{"sobol"} and \code{"MC"} or an user defined distribution \code{"spec"}. 
+When important sampling procedures are chosen, \code{n.points} points are chosen using importance sampling among a discrete set of \code{n.candidates} points (default: \code{n.points*10}) which are distributed according to a distribution \cr
+\code{init.distrib} (default: \code{"sobol"}). Possible values for \code{init.distrib} are the space filling distributions \code{"sobol"} and \code{"MC"} or an user defined distribution \code{"spec"}. 
 The \code{"sobol"} and \code{"MC"} choices correspond to quasi random and random points in the domain. 
 If the \code{"spec"} value is chosen the user must fill in manually the field \code{init.distrib.spec} to specify himself a n.candidates * d matrix of points in dimension d.
 }
@@ -82,18 +84,21 @@ Other arguments of the target function \code{fun}.
 The function used to build the integration points and weights (based on the options specified in \code{integcontrol}) is the function \code{\link{integration_design}}
 }
 \value{A list with components:
-\item{par}{The added observations ((ite*batchsize) * d matrix)}
-\item{value}{The value of the function \code{fun} at the added observations (vector of size ite*batchsize)}
-\item{nsteps}{The number of added observations (=ite*batchsize).}
+\item{par}{The added observations ((iter*batchsize) * d matrix)}
+\item{value}{The value of \code{fun} at the added observations (size: iter*batchsize)}
+\item{nsteps}{The number of added observations (=iter*batchsize).}
 \item{lastmodel}{The current (last) kriging model of \code{\link[DiceKriging]{km}} class.}
 \item{lastvalue}{The value of the criterion at the last added batch of points.}
 \item{allvalues}{If an optimization on a discrete set of points is chosen, the value of the criterion at all these points, for the last iteration, for the last point of the batch.}
 }
 
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+Chevalier C., Picheny V., Ginsbourger D. (2012), \emph{The KrigInv package: An efficient and user-friendly R implementation of Kriging-based inversion algorithms} ,\cr
+\url{http://hal.archives-ouvertes.fr/hal-00713537/}
 
-Chevalier C., Bect J., Ginsbourger D., Picheny V., Richet Y., Vazquez E. (2011), \emph{Fast kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}  ,\url{http://hal.archives-ouvertes.fr/docs/00/64/11/08/PDF/FastKrigingInversion.pdf}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
+
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
 }
 
 \author{
@@ -118,8 +123,10 @@ upper <- c(1,1)
 design <- data.frame(maximinLHS(N,k=2))
 response <- testfun(design)
 
-#km object with matern3_2 covariance (params estimated by ML from the observations)
-model <- km(formula=~., design = design, response = response,covtype="matern3_2")
+#km object with matern3_2 covariance
+#params estimated by ML from the observations
+model <- km(formula=~., design = design, 
+	response = response,covtype="matern3_2")
 
 optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)
@@ -128,8 +135,8 @@ batchsize <- 6
 
 \dontrun{
 obj <- EGIparallel(T=T,model=model,method="sur",batchsize=batchsize,
-                    fun=testfun,iter=iter,lower=lower,upper=upper,
-                    optimcontrol=optimcontrol,integcontrol=integcontrol)
+	fun=testfun,iter=iter,lower=lower,upper=upper,
+	optimcontrol=optimcontrol,integcontrol=integcontrol)
 
 par(mfrow=c(1,2))
 print_uncertainty_2d(model=model,T=T,main="probability of excursion",
