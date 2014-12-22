@@ -18,7 +18,7 @@ xscale = c(0, 1), show.points = TRUE, cex.main = 1, cex.lab = 1,
 cex.points = 1, cex.axis = 1, pch.points.init = 17, pch.points.end = 17, 
 col.points.init = "black", col.points.end = "red", xaxislab = NULL, 
 yaxislab = NULL, xaxispoint = NULL, yaxispoint = NULL, 
-xdecal = 3, ydecal = 3,DiceViewplot=TRUE,vorobmean=FALSE)
+xdecal = 3, ydecal = 3,DiceViewplot=FALSE,vorobmean=FALSE)
 }
 
 \arguments{
@@ -135,8 +135,8 @@ testfun <- fundet
 lower <- c(0)
 upper <- c(1)
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=1))
+#a 9 points initial design
+design <- data.frame( matrix(runif(N),ncol=1) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
@@ -144,7 +144,7 @@ response <- testfun(design)
 model <- km(formula=~., design = design, 
 	response = response,covtype="matern3_2")
 
-print_uncertainty_1d(DiceViewplot=TRUE,model=model,T=T,
+print_uncertainty_1d(DiceViewplot=FALSE,model=model,T=T,
 main="probability of excursion",cex.points=1.5,col.points.init="red",vorobmean=TRUE)
 
 

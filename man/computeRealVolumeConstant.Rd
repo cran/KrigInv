@@ -48,8 +48,8 @@ N <- 9 #number of observations
 testfun <- branin
 T <- 80
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=2))
+#a 9 points initial design
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
@@ -57,15 +57,16 @@ response <- testfun(design)
 model <- km(formula=~., design = design, 
 	response = response,covtype="matern3_2")
 
-integcontrol <- list(n.points=50,distrib="sur")
+integcontrol <- list(n.points=50,distrib="sur",init.distrib="MC")
 obj <- integration_design(integcontrol=integcontrol,
 	lower=c(0,0),upper=c(1,1),
 model=model,T=T)
 integration.points <- obj$integration.points
 integration.weights <- obj$integration.weights
 
+\dontrun{
 computeRealVolumeConstant(model=model,
 	integration.points=integration.points,
         integration.weights=integration.weights,T=T)
-
+}
 }

@@ -77,8 +77,8 @@ testfun <- branin
 lower <- c(0,0)
 upper <- c(1,1)
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=2))
+#a 9 points initial design
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
@@ -87,7 +87,7 @@ model <- km(formula=~., design = design,
 	response = response,covtype="matern3_2")
 
 optimcontrol <- list(method="genoud",pop.size=50,optim.option=1)
-integcontrol <- list(distrib="sur",n.points=50)
+integcontrol <- list(distrib="sur",n.points=50,init.distrib="MC")
 integration.param <- integration_design(integcontrol=integcontrol,d=2,
                                             lower=lower,upper=upper,model=model,
                                             T=T)

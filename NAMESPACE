@@ -1,5 +1,8 @@
-import("DiceKriging",
-	"rgenoud", "MASS", "lhs", "randtoolbox","DiceView")
+import("DiceKriging")
+importFrom("pbivnorm", pbivnorm)
+importFrom("rgenoud", genoud)
+importFrom("randtoolbox", sobol)
+
 
 export(
 bichon_optim,

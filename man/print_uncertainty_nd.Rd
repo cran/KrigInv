@@ -103,8 +103,8 @@ hartman3(runif(3))
 lower <- rep(0,times=3)
 upper <- rep(1,times=3)
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=3))
+#a 9 points initial design (LHS in 3 dimensions)
+design <- data.frame( matrix(runif(3*N),ncol=3) )
 response <- apply(design,1,testfun)
 
 #km object with matern3_2 covariance

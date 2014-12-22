@@ -53,8 +53,8 @@ set.seed(8)
 N <- 9 #number of observations
 testfun <- branin
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=2))
+#a 9 points initial design
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance

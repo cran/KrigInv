@@ -114,8 +114,8 @@ testfun <- branin
 lower <- c(0,0)
 upper <- c(1,1)
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=2))
+#a 9 points initial design
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
@@ -127,6 +127,7 @@ optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)
 iter <- 1
 
+\dontrun{
 obj1 <- EGI(T=T,model=model,method="sur",fun=testfun,iter=iter,
            lower=lower,upper=upper,optimcontrol=optimcontrol,
            integcontrol=integcontrol)
@@ -134,7 +135,7 @@ obj1 <- EGI(T=T,model=model,method="sur",fun=testfun,iter=iter,
 obj2 <- EGI(T=T,model=model,method="ranjan",fun=testfun,iter=iter,
            lower=lower,upper=upper,optimcontrol=optimcontrol)
 
-\dontrun{
+
 par(mfrow=c(1,3))
 print_uncertainty_2d(model=model,T=T,main="probability of excursion",
 type="pn",new.points=0,cex.points=2)
@@ -156,7 +157,7 @@ N <- 9;T <- 80
 testfun <- branin.noise
 lower <- c(0,0);upper <- c(1,1)
 
-design <- data.frame(maximinLHS(N,k=2))
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response.noise <- apply(design,1,testfun)
 response.noise - response
 
@@ -168,6 +169,7 @@ optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)
 iter <- 1
 
+\dontrun{
 obj1 <- EGI(T=T,model=model.noise,method="sur",fun=testfun,iter=iter,
            lower=lower,upper=upper,optimcontrol=optimcontrol,
            integcontrol=integcontrol,new.noise.var=30*30)
@@ -176,7 +178,6 @@ obj2 <- EGI(T=T,model=model.noise,method="ranjan",fun=testfun,iter=iter,
            lower=lower,upper=upper,optimcontrol=optimcontrol,
             new.noise.var=30*30)
 
-\dontrun{
 par(mfrow=c(1,3))
 print_uncertainty_2d(model=model.noise,T=T,
 main="probability of excursion, noisy obs.",

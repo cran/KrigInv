@@ -119,8 +119,8 @@ testfun <- branin
 lower <- c(0,0)
 upper <- c(1,1)
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=2))
+#a 9 points initial design
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
@@ -156,7 +156,7 @@ N <- 9;T <- 80
 testfun <- branin.noise
 lower <- c(0,0);upper <- c(1,1)
 
-design <- data.frame(maximinLHS(N,k=2))
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response.noise <- apply(design,1,testfun)
 response.noise - response
 

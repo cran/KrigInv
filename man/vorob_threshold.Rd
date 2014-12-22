@@ -38,8 +38,8 @@ N <- 9 #number of observations
 T <- 80 #threshold
 testfun <- branin
 
-#a 9 points initial design (LHS in 2 dimensions)
-design <- data.frame(maximinLHS(N,k=2))
+#a 9 points initial design
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
@@ -47,6 +47,7 @@ response <- testfun(design)
 model <- km(formula=~., design = design, 
 	response = response,covtype="matern3_2")
 
+\dontrun{
 ###we need to compute some additional arguments:
 #integration points, and current kriging means and variances at these points
 integcontrol <- list(n.points=50,distrib="sobol")
@@ -60,5 +61,5 @@ type="UK",se.compute=TRUE)
 pn <- pnorm((pred$mean-T)/pred$sd)
 
 vorob_threshold(pn)
-
+}
 }

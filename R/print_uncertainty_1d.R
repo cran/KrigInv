@@ -4,7 +4,7 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 			cex.points=1,cex.axis=1,pch.points.init=17,pch.points.end=17,
 			col.points.init="black",col.points.end="red",
 			xaxislab=NULL,yaxislab=NULL,xaxispoint=NULL,yaxispoint=NULL,xdecal=3,ydecal=3,
-      DiceViewplot=TRUE,vorobmean=FALSE){
+      DiceViewplot=FALSE,vorobmean=FALSE){
 	
 	n <- model@n
 	initSize <- n -new.points
@@ -74,10 +74,15 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 		lines(scale.x,rep(alpha,times=resolution),col="blue",lty=2,lwd=3)
 	}
   
+
+DiceViewplot <- FALSE #desactivated
   if(DiceViewplot){
     ymin <- min(pred$mean-3*pred$sd)
     ymax <- max(pred$mean+3*pred$sd)
-    sectionview.km(model,ylim = c(ymin,ymax),xlim=c(lower,upper),title="kriging mean and variance",Xname="x",yname="f(x)",)
+    
+#sectionview.km(model,ylim = c(ymin,ymax),xlim=c(lower,upper),
+#title="kriging mean and variance",Xname="x",yname="f(x)",)
+
 	  points(x=obs.X[1:initSize],y=pred_obs$mean[1:initSize], col=col.points.init, pch=pch.points.init,cex=cex.points)
 	  if (new.points!=0){
     	indices <- c((initSize+1):n)

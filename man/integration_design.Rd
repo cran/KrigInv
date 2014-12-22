@@ -76,11 +76,13 @@ Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 \examples{
 #integration_design
 
+\dontrun{
 set.seed(8)
 #when nothing is specified: integration points 
 #are chosen with the sobol sequence
 integ.param <- integration_design(lower=c(0,0),upper=c(1,1))
 plot(integ.param$integration.points)
+}
 
 #an example with pure random integration points
 integcontrol <- list(distrib="MC",n.points=50)
@@ -95,12 +97,12 @@ plot(integ.param$integration.points)
 #for these, we need a kriging model
 N <- 14;testfun <- branin; T <- 80
 lower <- c(0,0);upper <- c(1,1)
-design <- data.frame(maximinLHS(N,k=2))
+design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 model <- km(formula=~., design = design, 
 	response = response,covtype="matern3_2")
 
-integcontrol <- list(distrib="timse",n.points=200,n.candidates=5000)
+integcontrol <- list(distrib="timse",n.points=200,n.candidates=5000,init.distrib="MC")
 integ.param <- integration_design(integcontrol=integcontrol,
 		lower=c(0,0),upper=c(1,1), model=model,T=T)
 
