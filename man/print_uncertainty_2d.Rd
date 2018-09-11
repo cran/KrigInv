@@ -1,27 +1,26 @@
 \name{print_uncertainty_2d}
-\Rdversion{1.3}
+\Rdversion{1.4.1}
 \alias{print_uncertainty_2d}
 
 \title{
 Prints a measure of uncertainty for 2d function.
 }
 \description{
-This function draws the value of a given measure of uncertainty over the whole input domain (2D). 
-Possible measures are \code{"pn"} (probability of excursion) and measures specific to a sampling criterion: \code{"sur"}, \code{"timse"} and \code{"imse"}.
-This function can be used to print relevant outputs after having used the function \code{\link{EGI}}.
+This function draws the value of a given measure of uncertainty over the whole input domain (2D).
+The function can be used to print relevant outputs after having used the function \code{\link{EGI}} or \code{\link{EGIparallel}}.
 }
 
 \usage{
-print_uncertainty_2d(model, T, type = "pn", 
-lower = c(0, 0), upper = c(1, 1), resolution = 200, 
-new.points = 0, xlab = "", ylab = "", main = "", 
-xscale = c(0, 1), yscale = c(0, 1), show.points = TRUE, 
-cex.main = 1, cex.lab = 1, cex.contourlab = 1, cex.points = 1, 
-cex.axis = 1, pch.points.init = 17, pch.points.end = 17, 
-col.points.init = "black", col.points.end = "red", nlevels = 10, 
-levels = NULL, xaxislab = NULL, yaxislab = NULL, 
-xaxispoint = NULL, yaxispoint = NULL, xdecal = 3, ydecal = 3,
-krigmeanplot=FALSE,vorobmean=FALSE)
+print_uncertainty_2d(model, T, type = "pn",
+lower = c(0, 0), upper = c(1, 1), resolution = 200,
+new.points = 0,
+xscale = c(0, 1), yscale = c(0, 1), show.points = TRUE,
+cex.contourlab = 1, cex.points = 1,
+cex.axis = 1, pch.points.init = 17, pch.points.end = 17,
+col.points.init = "black", col.points.end = "red", nlevels = 10,
+levels = NULL, xaxislab = NULL, yaxislab = NULL,
+xaxispoint = NULL, yaxispoint = NULL,
+krigmeanplot=FALSE,vorobmean=FALSE,consQuantile=NULL,...)
 }
 
 \arguments{
@@ -29,11 +28,11 @@ krigmeanplot=FALSE,vorobmean=FALSE)
 Kriging model of \code{\link[DiceKriging]{km}} class.
 }
   \item{T}{
-Target value (scalar).
+Array containing one or several thresholds.
 }
   \item{type}{
-Type of uncertainty that the user wants to print. 
-	Possible values are \code{"pn"}  (probability of excursion), or 
+Type of uncertainty that the user wants to print.
+	Possible values are \code{"pn"}  (probability of excursion), or
 	\code{"sur"}, \code{"imse"}, \code{"timse"}, \code{"vorob"} if we print a measure of uncertainty corresponding to one criterion.
 }
   \item{lower}{
@@ -46,17 +45,8 @@ Vector containing the upper bounds of the input domain.
 Number of points to discretize the domain. This discretization is used in each dimension, so that the total number of points is \code{resolution^2}.
 }
   \item{new.points}{
-Number of new observations. 
+Number of new observations.
 These observations are the last new.points observations and can be printed in another color and the initial observations (see argument: \code{col.points.end}).
-}
-  \item{xlab}{
-Label for the x axis.
-}
-  \item{ylab}{
-Label for the y axis.
-}
-  \item{main}{
-Title of the graph.
 }
   \item{xscale}{
 If one wants to rescale the input domain on another interval it is possible to set this vector of size 2. The new interval will be translated by \code{xscale[1]} and expanded by a factor \code{xscale[2] - xscale[1]}.
@@ -66,12 +56,6 @@ see: \code{xscale}.
 }
   \item{show.points}{
 Boolean: should we show the observations on the graph ?
-}
-  \item{cex.main}{
-Multiplicative factor for the size of the title.
-}
-  \item{cex.lab}{
-Multiplicative factor for the size of titles of the axis.
 }
   \item{cex.contourlab}{
 Multiplicative factor for the size of labels of the contour plot.
@@ -112,55 +96,61 @@ Position of these new labels on x axis.
   \item{yaxispoint}{
 Position of these new labels on y axis.
 }
-  \item{xdecal}{
-Optional position shifting of the titles of the x axis.
-}
-  \item{ydecal}{
-Optional position shifting of the titles of the y axis.
-}
 \item{krigmeanplot}{
 Optional boolean. When it is set to \code{FALSE} (default) the contour plot corresponds to the uncertainty selected. When it is set to \code{TRUE} the contour plot gives the kriging mean.
 }
 \item{vorobmean}{
 Optional boolean. When it is set to \code{TRUE} the Vorob'ev expectation is plotted. It corresponds to the averaged excursion set, using the definition of Vorob'ev.
 }
+\item{consQuantile}{
+Optional value for plotting conservative quantiles. In order to plot \itemize{
+\item{Conservative estimates: \code{consQuantile} is a list containing at least \code{consLevel} (scalar), with the option \code{typeEx} (character, default = ">").}
+\item{Generic Vorob'ev quantiles: \code{consQuantile} is a scalar corresponding to the Vorob'ev quantile level.}
+}
+}
+\item{...}{
+Additional arguments to the \code{image} function.
+}
 }
 
 \value{
-the integrated uncertainty
+The integrated uncertainty. If the conservative estimate is computed, it also returns the conservative quantile level.
 }
 
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2012), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing vol. 22(3), pp 773-793
 }
 
-\author{ 
-Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+\author{
+Clement Chevalier (University of Neuchatel, Switzerland)
+
+Dario Azzimonti (IDSIA, Switzerland)
 }
 
-\seealso{\code{\link{EGI}}}
+\seealso{\code{\link{print_uncertainty_1d}},\code{\link{print_uncertainty_nd}}}
 
 \examples{
 #print_uncertainty_2d
 
-set.seed(8)
-N <- 9 #number of observations
-T <- 80 #threshold
+set.seed(9)
+N <- 20 #number of observations
+T <- c(20,40) #thresholds
 testfun <- branin
 lower <- c(0,0)
 upper <- c(1,1)
 
-#a 9 points initial design
+#a 20 points initial design
 design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
 #params estimated by ML from the observations
-model <- km(formula=~., design = design, 
+model <- km(formula=~., design = design,
 	response = response,covtype="matern3_2")
 
+\dontrun{
 print_uncertainty_2d(model=model,T=T,main="probability of excursion",
-                     type="pn",krigmeanplot=TRUE)
+                     type="pn",krigmeanplot=TRUE,vorobmean=TRUE)
 
 #print_uncertainty_2d(model=model,T=T,main="vorob uncertainty",
 #type="vorob",krigmeanplot=FALSE)
@@ -171,10 +161,12 @@ print_uncertainty_2d(model=model,T=T,main="probability of excursion",
 #print_uncertainty_2d(model=model,T=T,main="timse uncertainty",
 #type="timse",krigmeanplot=FALSE)
 
-#print_uncertainty_2d(model=model,T=T,main="sur 
-#uncertainty",type="sur",krigmeanplot=FALSE)
-
-#print_uncertainty_2d(model=model,T=T,main="probability of excursion",
-#                     type="pn",krigmeanplot=TRUE,vorobmean=TRUE)
-
+## Print uncertainty 2d and conservative estimate at level 0.95
+# uq2d<- print_uncertainty_2d(model=model,T=T,main="probability of excursion",
+#                     type="pn",krigmeanplot=TRUE,vorobmean=FALSE,
+#                     consQuantile=list(consLevel=0.95))
+# print_uncertainty_2d(model=model,T=T,main="probability of excursion",
+#                     type="pn",krigmeanplot=TRUE,vorobmean=FALSE,
+#                     consQuantile=uq2d[2])
+}
 }

@@ -1,17 +1,18 @@
 \name{max_vorob_parallel}
-\Rdversion{1.3}
+\Rdversion{1.4.1}
 \alias{max_vorob_parallel}
 
 \title{ Minimizer of the parallel vorob criterion}
 
 \description{
-Minimization, based on the package rgenoud (or on exhaustive search on a discrete set), of the Vorob'ev criterion for a batch of candidate sampling points.  
+Minimization, based on the package rgenoud (or on exhaustive search on a discrete set), of the Vorob'ev criterion for a batch of candidate sampling points.
 }
 
 \usage{
-max_vorob_parallel(lower, upper, optimcontrol = NULL, 
+max_vorob_parallel(lower, upper, optimcontrol = NULL,
 batchsize, integration.param, T,
-model, new.noise.var = 0)
+model, new.noise.var = 0,
+penalisation = NULL, typeEx = ">")
 }
 
 \arguments{
@@ -22,11 +23,11 @@ Vector containing the lower bounds of the design space.
 Vector containing the upper bounds of the design space.
 }
   \item{optimcontrol}{
-Optional list of control parameters for the optimization of the sampling criterion. The field \code{method} defines which optimization method is used: it can be either \code{"genoud"} (default) for an optimisation using the genoud algorithm, or \code{"discrete"} for an optimisation over a specified discrete set. 
-If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm: 
+Optional list of control parameters for the optimization of the sampling criterion. The field \code{method} defines which optimization method is used: it can be either \code{"genoud"} (default) for an optimisation using the genoud algorithm, or \code{"discrete"} for an optimisation over a specified discrete set.
+If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm:
 \code{pop.size}  (default : 50*d),  \code{max.generations} (10*d), \code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
-If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly. 
-Finally, one can control the field {optim.option} in order to decide how to optimize the sampling criterion. 
+If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly.
+Finally, one can control the field {optim.option} in order to decide how to optimize the sampling criterion.
 If \code{optim.option} is set to 2 (default), batchsize sequential optimizations in dimension d are performed to find the optimum.
 If \code{optim.option} is set to 1, only one optimization in dimension batchsize*d is performed. This option is only available with \code{"genoud"}. This option might provide more global and accurate solutions, but is a lot more expensive.
 }
@@ -34,11 +35,11 @@ If \code{optim.option} is set to 1, only one optimization in dimension batchsize
 Number of points to sample simultaneously. The sampling criterion will return batchsize points at a time for sampling.
 }
   \item{integration.param}{
-Optional list of control parameter for the computation of integrals, containing the fields \code{integration.points}: a p*d matrix corresponding to p integrations points and \code{integration.weights}: a vector of size p corresponding to the weights of these integration points. 
-If nothing is specified, default values are used (see: function \code{\link{integration_design}} for more details). 
+Optional list of control parameter for the computation of integrals, containing the fields \code{integration.points}: a p*d matrix corresponding to p integrations points and \code{integration.weights}: a vector of size p corresponding to the weights of these integration points.
+If nothing is specified, default values are used (see: function \code{\link{integration_design}} for more details).
 }
   \item{T}{
-Target value (scalar).
+Target value (scalar). The criterion CANNOT be used with multiple thresholds.
 }
   \item{model}{
 A Kriging model of \code{\link[DiceKriging]{km}} class.
@@ -46,6 +47,8 @@ A Kriging model of \code{\link[DiceKriging]{km}} class.
   \item{new.noise.var}{
 Optional scalar value of the noise variance of the new observations.
 }
+	\item{penalisation}{Optional penalization constant for type I errors. If equal to zero,  computes the Type II criterion.}
+    \item{typeEx}{A character (">" or "<") identifying the type of excursion}
 }
 
 \value{A list with components:
@@ -55,13 +58,17 @@ Optional scalar value of the noise variance of the new observations.
 }
 
 \references{
-Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
+Chevalier C., Ginsbouger D., Bect J., Molchanov I. (2013) \emph{Estimating and quantifying uncertainties on level sets using the Vorob'ev expectation and deviation with gaussian process models} mODa 10, Advances in Model-Oriented Design and Analysis, Contributions to Statistics, pp 35-43
 
-Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
+Chevalier C. (2013) \emph{Fast uncertainty reduction strategies relying on Gaussian process models} Ph.D Thesis, University of Bern
+
+Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2018). \emph{Adaptive design of experiments for conservative estimation of excursion sets.} Under revision. Preprint at \href{https://hal.archives-ouvertes.fr/hal-01379642}{hal-01379642}
 }
 
 \author{
-Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+Clement Chevalier (University of Neuchatel, Switzerland)
+
+Dario Azzimonti (IDSIA, Switzerland)
 }
 
 \seealso{\code{\link{EGIparallel}},\code{\link{max_sur_parallel}}}
@@ -69,21 +76,20 @@ Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 \examples{
 #max_vorob_parallel
 
-
-set.seed(8)
-N <- 9 #number of observations
+set.seed(9)
+N <- 20 #number of observations
 T <- 80 #threshold
 testfun <- branin
 lower <- c(0,0)
 upper <- c(1,1)
 
-#a 9 points initial design
+#a 20 points initial design
 design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
 #params estimated by ML from the observations
-model <- km(formula=~., design = design, 
+model <- km(formula=~., design = design,
 	response = response,covtype="matern3_2")
 
 optimcontrol <- list(method="genoud",pop.size=200,optim.option=2)
@@ -100,8 +106,8 @@ obj <- max_vorob_parallel(lower=lower,upper=upper,optimcontrol=optimcontrol,
                         #5 optims in dimension 2 !
 
 obj$par;obj$value #optimum in 5 new points
-new.model <- update_km(model=model,NewX=obj$par,NewY=apply(obj$par,1,testfun),
-                       CovReEstimate=TRUE)
+new.model <- update(object=model,newX=obj$par,newy=apply(obj$par,1,testfun),
+                       cov.reestim=TRUE)
 
 par(mfrow=c(1,2))
 print_uncertainty(model=model,T=T,type="pn",lower=lower,upper=upper,vorobmean=TRUE,

@@ -1,24 +1,25 @@
 
-print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=500,new.points=0,xlab="",ylab="",
-			main="",xscale=c(0,1),show.points=TRUE,cex.main=1,cex.lab=1,
+print_uncertainty_1d <- function(model,T,type="pn",
+      lower=0,upper=1,resolution=500,new.points=0,
+			xscale=c(0,1),show.points=TRUE,
 			cex.points=1,cex.axis=1,pch.points.init=17,pch.points.end=17,
 			col.points.init="black",col.points.end="red",
-			xaxislab=NULL,yaxislab=NULL,xaxispoint=NULL,yaxispoint=NULL,xdecal=3,ydecal=3,
-      DiceViewplot=FALSE,vorobmean=FALSE){
-	
+			xaxislab=NULL,yaxislab=NULL,xaxispoint=NULL,yaxispoint=NULL,
+      vorobmean=FALSE,krigmeanplot=FALSE,Tplot=FALSE,consQuantile=NULL,...){
+
 	n <- model@n
 	initSize <- n -new.points
 	obs.X <- as.numeric(model@X)
 	alpha <- NULL
-	
+
 	s <- matrix(seq(from=lower,to=upper,length=resolution),ncol=1)
-	
+
 	pred <- predict_nobias_km(object=model,newdata=s,type="UK")
+	pn <- excursion_probability(mn = pred$mean,sn = pred$sd,T = T)
+
 	pred_obs <- predict_nobias_km(object=model,newdata=model@X,type="UK")
-	
-	pn <- pnorm((pred$mean - T)/pred$sd)
-	pn_obs <- pnorm((pred_obs$mean - T) / pred_obs$sd)
-		
+	pn_obs <- excursion_probability(mn = pred_obs$mean,sn = pred_obs$sd,T = T)
+
 	if(type=="pn"){
 		myvect <- pn
 		obs.Y <- pn_obs
@@ -26,11 +27,20 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
 		myvect <- pn * (1-pn)
 		obs.Y <- rep(0,times=n)
 	}else if(type=="timse"){
-		Wn <- 1/(sqrt(2*pi)*pred$sd)*exp(-1/2*((pred$mean-T)/pred$sd)^2)
-		myvect <- (pred$sd)^2 * Wn
+	  if(length(T)==1){
+	    Wn <- 1/(sqrt(2*pi)*pred$sd)*exp(-1/2*((pred$mean-T)/pred$sd)^2)
+	    myvect <- (pred$sd)^2 * Wn
+	  }else{
+	    Wn0 <- 1/(sqrt(2*pi)*pred$sd)
+	    Wn <- 0
+	    for(i in 1:length(T)){
+	      Ti <- T[i]
+	      Wn <- Wn + Wn0 * exp(-1/2*((pred$mean-Ti)/pred$sd)^2)
+	    }
+	    myvect <- (pred$sd)^2 * Wn
+	  }
 		obs.Y <- rep(0,times=n)
-	}
-	else if(type=="imse"){
+	}else if(type=="imse"){
 		myvect <- (pred$sd)^2
 		obs.Y <- rep(0,times=n)
 	}else if(type=="vorob"){
@@ -38,59 +48,69 @@ print_uncertainty_1d <- function(model,T,type="pn",lower=0,upper=1,resolution=50
     pn_bigger_than_alpha <- (pn>alpha)+0
     pn_lower_than_alpha <- 1-pn_bigger_than_alpha
     myvect <- pn*pn_lower_than_alpha + (1-pn)*pn_bigger_than_alpha
-		obs.Y <- rep(0,times=n)  
+		obs.Y <- rep(0,times=n)
 	}else{
-		print("unknown value for the type argument, we take type=pn")		
+		print("unknown 'type' value, we set type = pn")
 		myvect <- pn
 		obs.Y <- pn_obs
 	}
-	
+	res <- mean(myvect)
+
+
 	scale.x <- xscale[1] + seq(from=lower,to=upper,length=resolution) * (xscale[2]-xscale[1])
 	obs.X <- xscale[1] + obs.X * (xscale[2]-xscale[1])
 	axes <- is.null(xaxislab)
-    
-  if(DiceViewplot) par(mfrow=c(1,2))
-  
-	plot(x = scale.x, y = myvect, type = "l", xlab = "", ylab = "",main=main,cex.axis=cex.axis,cex.main=cex.main,cex.lab=cex.lab,axes=axes,lwd=2)
-	mtext(xlab, side=1, line=xdecal,cex=cex.lab )
-	mtext(ylab, side=2, line=ydecal,cex=cex.lab )
-	
+
+	plot(x = scale.x, y = myvect, type = "l",axes=axes,...)
+
 	if(!is.null(xaxislab)) {
 		axis(side=1,at=xaxispoint,labels=xaxislab,cex.axis=cex.axis)
 		axis(side=2,at=yaxispoint,labels=yaxislab,cex.axis=cex.axis)
 	}
-	
+
 	if(show.points){
 		points(x=obs.X[1:initSize],y=obs.Y[1:initSize], col=col.points.init, pch=pch.points.init,cex=cex.points)
-	
+
 		if (new.points!=0){
 			indices <- c((initSize+1):n)
-			points(x=obs.X[indices],y=obs.Y[indices], col=col.points.end, pch=pch.points.end,cex=cex.points)	
-			}
+			points(x=obs.X[indices],y=obs.Y[indices], col=col.points.end, pch=pch.points.end,cex=cex.points)
+		}
 	}
-    
+
 	if(vorobmean){
 		if(is.null(alpha)) alpha <- vorob_threshold(pn=pn)
+		if(!is.numeric(alpha)) alpha <- 0.5
 		lines(scale.x,rep(alpha,times=resolution),col="blue",lty=2,lwd=3)
 	}
-  
 
-DiceViewplot <- FALSE #desactivated
-  if(DiceViewplot){
-    ymin <- min(pred$mean-3*pred$sd)
-    ymax <- max(pred$mean+3*pred$sd)
-    
-#sectionview.km(model,ylim = c(ymin,ymax),xlim=c(lower,upper),
-#title="kriging mean and variance",Xname="x",yname="f(x)",)
-
-	  points(x=obs.X[1:initSize],y=pred_obs$mean[1:initSize], col=col.points.init, pch=pch.points.init,cex=cex.points)
-	  if (new.points!=0){
-    	indices <- c((initSize+1):n)
-	  	points(x=obs.X[indices],y=pred_obs$mean[indices], col=col.points.end, pch=pch.points.end,cex=cex.points)	
+	if(!is.null(consQuantile)){
+	  if(is.numeric(consQuantile)){
+	    lines(scale.x,rep(consQuantile,times=resolution),col="green",lty=2,lwd=3)
+	  }else{
+	    if(!is.null(consQuantile$consLevel)){
+	      pred <- predict_nobias_km(object=model,newdata=s,type="UK",cov.compute = TRUE)
+	      pred$cov <- pred$cov +1e-7*diag(nrow = nrow(pred$cov),ncol = ncol(pred$cov))
+	      current.CE <- conservativeEstimate(alpha = consQuantile$consLevel, pred=pred,
+	                                         design=s, threshold=T[2], pn = pn,
+	                                         type = ">", verb = 0,
+	                                         lightReturn = TRUE, algo = "GANMC")
+	      lines(scale.x,rep(current.CE$lvs,times=resolution),col="green",lty=2,lwd=3)
+	      res <- c(res, current.CE$lvs)
+	      names(res) <- c("integrated pn","CEquantile")
+	    }
 	  }
-    lines(scale.x,rep(T,times=resolution),col="black",lty=2,lwd=3)
-  }
-  	
-	return(mean(myvect))
+
+	}
+
+	if(krigmeanplot){
+	  par(new = TRUE)
+	  plot(x=scale.x, y = pred$mean, type = "l", axes = FALSE, xlab = "", ylab = "",col="blue",lwd=2)
+	  axis(side=4, at = pretty(range(pred$mean)))
+	  if(Tplot){
+	    abline(h = T,col="red",lwd=2)
+	  }
+	}
+
+	return(res)
 
 }

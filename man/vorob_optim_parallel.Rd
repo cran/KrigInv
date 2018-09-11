@@ -1,18 +1,19 @@
 \name{vorob_optim_parallel}
-\Rdversion{1.3}
+\Rdversion{1.4.1}
 \alias{vorob_optim_parallel}
 
 \title{ Parallel Vorob'ev criterion }
 \description{
-Evaluation of the parallel Vorob'ev criterion for some candidate points. To be used in optimization routines, like in \code{\link{max_vorob_parallel}}. 
-To avoid numerical instabilities, the new points are evaluated only if they are not too close to an existing observation, or if there is some observation noise. 
+Evaluation of the parallel Vorob'ev criterion for some candidate points. To be used in optimization routines, like in \code{\link{max_vorob_parallel}}.
+To avoid numerical instabilities, the new points are evaluated only if they are not too close to an existing observation, or if there is some observation noise.
 The criterion is the integral of the posterior Vorob'ev uncertainty.
 }
 \usage{
-vorob_optim_parallel(x, integration.points, integration.weights = NULL, 
-intpoints.oldmean, intpoints.oldsd, 
-precalc.data, model, T, 
-new.noise.var = NULL, batchsize, alpha, current.vorob)
+vorob_optim_parallel(x, integration.points, integration.weights = NULL,
+intpoints.oldmean, intpoints.oldsd,
+precalc.data, model, T,
+new.noise.var = NULL, batchsize, alpha, current.vorob,
+penalisation=NULL,typeEx=">")
 }
 
 \arguments{
@@ -23,27 +24,33 @@ new.noise.var = NULL, batchsize, alpha, current.vorob)
 	\item{intpoints.oldsd}{Vector of size p corresponding to the kriging standard deviation at the integration points before adding  the batchsize points \code{x} to the design of experiments.}
   	\item{precalc.data}{List containing useful data to compute quickly the updated kriging variance. This list can be generated using the \code{\link{precomputeUpdateData}} function.}
  	\item{model}{Object of class \code{\link[DiceKriging]{km}} (Kriging model).}
-	\item{T}{Target value (scalar).}
+	\item{T}{Target value (scalar). The criterion CANNOT be used with multiple thresholds.}
   	\item{new.noise.var}{Optional scalar value of the noise variance for the new observations.}
   	\item{batchsize}{Number of points to sample simultaneously. The sampling criterion will return batchsize points at a time for sampling.}
     \item{alpha}{The Vorob'ev threshold.}
   	\item{current.vorob}{Current value of the vorob criterion (before adding new observations)}
+  	\item{penalisation}{Optional penalization constant for type I errors. If equal to zero,  computes the Type II criterion.}
+    \item{typeEx}{A character (">" or "<") identifying the type of excursion}
+
 }
 \details{
 The first argument \code{x} has been chosen to be a vector of size batchsize*d (and not a matrix with batchsize rows and d columns) so that an optimizer like genoud can optimize it easily.
 For example if d=2, batchsize=3 and \code{x=c(0.1,0.2,0.3,0.4,0.5,0.6)}, we will evaluate the parallel criterion at the three points (0.1,0.2),(0.3,0.4) and (0.5,0.6).
-The last argument \code{current.vorob} is used as a default value for the vorob criterion when the new points \code{x} are too close to existing observations.
 }
 
 \value{Parallel vorob value}
 \references{
-Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
+Chevalier C., Ginsbouger D., Bect J., Molchanov I. (2013) \emph{Estimating and quantifying uncertainties on level sets using the Vorob'ev expectation and deviation with gaussian process models} mODa 10, Advances in Model-Oriented Design and Analysis, Contributions to Statistics, pp 35-43
 
-Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
+Chevalier C. (2013) \emph{Fast uncertainty reduction strategies relying on Gaussian process models} Ph.D Thesis, University of Bern
+
+Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2018). \emph{Adaptive design of experiments for conservative estimation of excursion sets}. Under revision. Preprint at \href{https://hal.archives-ouvertes.fr/hal-01379642}{hal-01379642}
 }
 
 \author{
-Clement Chevalier (IMSV, Switzerland, and IRSN, France)
+Clement Chevalier (University of Neuchatel, Switzerland)
+
+Dario Azzimonti (IDSIA, Switzerland)
 }
 
 \seealso{\code{\link{EGIparallel}}, \code{\link{max_vorob_parallel}} }
@@ -51,18 +58,18 @@ Clement Chevalier (IMSV, Switzerland, and IRSN, France)
 \examples{
 #vorob_optim_parallel
 
-set.seed(8)
-N <- 9 #number of observations
+set.seed(9)
+N <- 20 #number of observations
 T <- 80 #threshold
 testfun <- branin
 
-#a 9 points initial design
+#a 20 points initial design
 design <- data.frame( matrix(runif(2*N),ncol=2) )
 response <- testfun(design)
 
 #km object with matern3_2 covariance
 #params estimated by ML from the observations
-model <- km(formula=~., design = design, 
+model <- km(formula=~., design = design,
 	response = response,covtype="matern3_2")
 
 ###we need to compute some additional arguments:
@@ -84,7 +91,7 @@ precalc.data <- precomputeUpdateData(model,integration.points)
 batchsize <- 4
 x <- c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8)
 #one evaluation of the vorob_optim_parallel criterion
-#we calculate the expectation of the future "vorob" uncertainty 
+#we calculate the expectation of the future "vorob" uncertainty
 #when 4 points are added to the doe
 #the 4 points are (0.1,0.2) , (0.3,0.4), (0.5,0.6), (0.7,0.8)
 vorob_optim_parallel(x=x,integration.points=integration.points,
@@ -94,7 +101,7 @@ vorob_optim_parallel(x=x,integration.points=integration.points,
           batchsize=batchsize,alpha=alpha,current.vorob=Inf)
 
 
-#the function max_vorob_parallel will help to find the optimum: 
+#the function max_vorob_parallel will help to find the optimum:
 #ie: the batch of 4 minimizing the expectation of the future uncertainty
 
 }

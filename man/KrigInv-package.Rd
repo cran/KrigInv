@@ -2,74 +2,64 @@
 \alias{KrigInv}
 \docType{package}
 
-\title{ Kriging-based inversion of deterministic and stochastic computer codes }
+\title{ Kriging-Based Inversion for Deterministic and Noisy Computer Experiments }
 
 \description{
-Sequential algorithms based on Kriging for computer experiments, meant to explore the subset of input parameters corresponding to a prescribed level of the output.
+Kriging-based sequential algorithms, meant to identify the excursion set of a real valued function. The algorithms can also identify one or several level sets.
 }
 
 \details{
 \tabular{ll}{
 Package: \tab KrigInv\cr
 Type: \tab Package\cr
-Version: \tab 1.3\cr
-Date: \tab 2012-08-01\cr
+Version: \tab 1.4.1\cr
+Date: \tab 2018-09-04\cr
 License: \tab GPL version 3\cr
 LazyLoad: \tab yes\cr
 }
 }
 
 \author{
-C. Chevalier (IMSV, University of Bern, Switzerland and IRSN)
+Clement Chevalier (University of Neuchatel, Switzerland)
 
-V. Picheny (Ecole Centrale Paris)
+Victor Picheny (INRA, Toulouse, France)
 
-D. Ginsbourger (IMSV, University of Bern, Switzerland)
+David Ginsbourger (IDIAP Martigny and University of Bern, Switzerland)
 
-with contributions from Yann Richet (IRSN)
+Dario Azzimonti (IDSIA, Switzerland)
 
-Maintainer: C. Chevalier (clement.chevalier@stat.unibe.ch)
+with contributions from Yann Richet (IRSN, France)
+
+Maintainer: Clement Chevalier (clement.chevalier@unine.ch)
 }
 
 \note{
-A first prototype of this package was originally developed by D. Ginsbourger in the frame of a collaboration with IRSN (Institut de Radioprotection et de Surete Nucleaire), acting through Yann Richet.
+Important functions are \code{\link{EGI}} and \code{\link{EGIparallel}}. The last 1.4 version allows to handle multiple thresholds T, stored in an array and implements conservative excursion set strategies.
 
-The three main authors thank IRSN for sponsoring open source research, and allowing them to spread the present package and publish it on CRAN.
-
-They also would like to warmly thank Yann Richet for numerous discussions concerning this package, and more!
-
-Package \code{rgenoud} >=5.3.3. is recommended.
-
-Important function (key to all proposed methods):
-\tabular{ll}{
-\code{EGI} \tab Sequential Kriging-based inversion \cr
-
+A first prototype of this package was originally developed by D. Ginsbourger in the frame of a collaboration with IRSN (Institut de Radioprotection et de Surete Nucleaire), acting through Yann Richet. The three main authors thank IRSN for sponsoring open source research, and allowing them to spread the present package and publish it on CRAN. They also would like to warmly thank Yann Richet for numerous discussions concerning this package, and more!
 }
 
-}
+
 
 
 \references{
-Chevalier C., Picheny V., Ginsbourger D. (2012), \emph{The KrigInv package: An efficient and user-friendly R implementation of Kriging-based inversion algorithms} ,\cr
-\url{http://hal.archives-ouvertes.fr/hal-00713537/}
+Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2018). \emph{Adaptive design of experiments for conservative estimation of excursion sets}. Under revision. Preprint at \href{https://hal.archives-ouvertes.fr/hal-01379642}{hal-01379642}
 
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2010), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing, pp.1-21, 2011, \url{http://arxiv.org/abs/1009.5177}
+Chevalier C., Picheny V., Ginsbourger D. (2014), \emph{Kriginv: An efficient and user-friendly implementation of batch sequential inversion strategies based on kriging} (2014) Computational Statistics & Data Analysis, vol. 71, pp 1021-1034
 
-Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2011), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set} ,\url{http://hal.archives-ouvertes.fr/hal-00641108/}
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2014), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}, Technometrics, vol. 56(4), pp 455-465
 
-Chevalier C., Ginsbourger D. (2012), \emph{Corrected Kriging update formulae for batch-sequential data assimilation} ,\url{http://arxiv.org/pdf/1203.6452.pdf}
+Chevalier C., Ginsbourger D. (2014), \emph{Corrected Kriging update formulae for batch-sequential data assimilation}, in Pardo-Iguzquiza, E., et al. (Eds.) Mathematics of Planet Earth, pp 119-122
 
-Picheny, V., Ginsbourger, D., Roustant, O., Haftka, R.T., Adaptive designs of experiments for accurate approximation of a target region, J. Mech. Des. - July 2010 - Volume 132, Issue 7, \url{http://dx.doi.org/10.1115/1.4001873}
+Chevalier C. (2013) \emph{Fast uncertainty reduction strategies relying on Gaussian process models} Ph.D Thesis, University of Bern
 
-Picheny V., Improving accuracy and compensating for uncertainty in surrogate modeling, Ph.D. thesis, University of Florida and Ecole Nationale Superieure des Mines de Saint-Etienne
+Picheny V., Ginsbourger D., Roustant O., Haftka R.T., (2010) \emph{Adaptive designs of experiments for accurate approximation of a target region}, J. Mech. Des. vol. 132(7)
 
-Vazquez, E., Bect, J.: A sequential Bayesian algorithm to estimate a probability of failure. In: Proceedings of the 15th IFAC Symposium on System Identification, (SYSID 2009), Saint-Malo, France (2009)
+Picheny V. (2009) \emph{Improving accuracy and compensating for uncertainty in surrogate modeling}, Ph.D. thesis, University of Florida and Ecole Nationale Superieure des Mines de Saint-Etienne
 
-Bichon, B.J., Eldred, M.S., Swiler, L.P., Mahadevan, S., McFarland, J.M.: Efficient global reliability analysis for nonlinear implicit performance functions. AIAA Journal 46 (10), 2459-2468 (2008)
+Bichon B.J., Eldred M.S., Swiler L.P., Mahadevan S., McFarland J.M. (2008) \emph{Efficient global reliability analysis for nonlinear implicit performance functions}, AIAA Journal 46(10), pp 2459-2468
 
-Ranjan, P., Bingham, D., Michailidis, G.: Sequential experiment design for contour estimation from complex computer codes. Technometrics 50(4), 527-541 (2008)
-
-Rasmussen C.E., Williams C.K.I. (2006), \emph{Gaussian Processes for Machine Learning}, the MIT Press, \url{www.GaussianProcess.org/gpml}
+Ranjan P., Bingham D., Michailidis G. (2008) \emph{Sequential experiment design for contour estimation from complex computer codes} Technometrics 50(4), pp 527-541
 }
 
 \keyword{package}
