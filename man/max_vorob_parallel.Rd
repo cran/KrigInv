@@ -27,7 +27,7 @@ Optional list of control parameters for the optimization of the sampling criteri
 If the field \code{method} is set to \code{"genoud"}, one can set some parameters of this algorithm:
 \code{pop.size}  (default : 50*d),  \code{max.generations} (10*d), \code{wait.generations} (2),  \code{BFGSburnin} (2) and the mutations \code{P1}, \code{P2}, up to \code{P9} (see \code{\link[rgenoud]{genoud}}). Numbers into brackets are the default values.
 If the field \code{method} is set to \code{"discrete"}, one can set the field \code{optim.points}: p * d matrix corresponding to the p points where the criterion will be evaluated. If nothing is specified, 100*d points are chosen randomly.
-Finally, one can control the field {optim.option} in order to decide how to optimize the sampling criterion.
+Finally, one can control the field \code{optim.option} in order to decide how to optimize the sampling criterion.
 If \code{optim.option} is set to 2 (default), batchsize sequential optimizations in dimension d are performed to find the optimum.
 If \code{optim.option} is set to 1, only one optimization in dimension batchsize*d is performed. This option is only available with \code{"genoud"}. This option might provide more global and accurate solutions, but is a lot more expensive.
 }
@@ -58,11 +58,11 @@ Optional scalar value of the noise variance of the new observations.
 }
 
 \references{
-Chevalier C., Ginsbouger D., Bect J., Molchanov I. (2013) \emph{Estimating and quantifying uncertainties on level sets using the Vorob'ev expectation and deviation with gaussian process models} mODa 10, Advances in Model-Oriented Design and Analysis, Contributions to Statistics, pp 35-43
+Chevalier C., Ginsbourger D., Bect J., Molchanov I. (2013) \emph{Estimating and quantifying uncertainties on level sets using the Vorob'ev expectation and deviation with gaussian process models} mODa 10, Advances in Model-Oriented Design and Analysis, Contributions to Statistics, pp 35-43. \doi{10.1007/978-3-319-00218-7_5}
 
 Chevalier C. (2013) \emph{Fast uncertainty reduction strategies relying on Gaussian process models} Ph.D Thesis, University of Bern
 
-Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2018). \emph{Adaptive design of experiments for conservative estimation of excursion sets.} Under revision. Preprint at \href{https://hal.archives-ouvertes.fr/hal-01379642}{hal-01379642}
+Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2021). \emph{Adaptive design of experiments for conservative estimation of excursion sets}. Technometrics, 63(1):13-26. \doi{10.1080/00401706.2019.1693427}
 }
 
 \author{
@@ -99,7 +99,7 @@ integration.param <- integration_design(integcontrol=integcontrol,d=2,
                                             T=T)
 batchsize <- 5 #number of new points
 
-\dontrun{
+\donttest{
 obj <- max_vorob_parallel(lower=lower,upper=upper,optimcontrol=optimcontrol,
                         batchsize=batchsize,T=T,model=model,
                         integration.param=integration.param)

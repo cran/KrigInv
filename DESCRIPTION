@@ -2,8 +2,8 @@ Package: KrigInv
 Type: Package
 Title: Kriging-Based Inversion for Deterministic and Noisy Computer
         Experiments
-Version: 1.4.2
-Date: 2022-09-06
+Version: 1.4.3
+Date: 2026-11-10
 Authors@R: 
     c(person(given = "Clement",
              family = "Chevalier",
@@ -33,17 +33,19 @@ Maintainer: Dario Azzimonti <dario.azzimonti@gmail.com>
 Depends: DiceKriging
 Imports: randtoolbox, rgenoud, pbivnorm, anMC, mvtnorm
 Suggests: testthat
-Description: Criteria and algorithms for sequentially estimating level sets of a multivariate numerical function, possibly observed with noise.
-URL: https://doi.org/10.1016/j.csda.2013.03.008
+Config/testthat/edition: 3
+Description: Criteria and algorithms for sequentially estimating level sets of a multivariate numerical function, possibly observed with noise. The methods are described in Chevalier, Picheny and Ginsbourger (2014) <doi:10.1016/j.csda.2013.03.008> and Azzimonti, Ginsbourger, Chevalier, Bect and Richet (2021) <doi:10.1080/00401706.2019.1693427>.
+URL: https://github.com/KrigInvTeam/KrigInv
+BugReports: https://github.com/KrigInvTeam/KrigInv/issues
 License: GPL-3
-LazyLoad: yes
-Repository: CRAN
-RoxygenNote: 6.1.0
 NeedsCompilation: no
-Packaged: 2022-09-09 13:37:24 UTC; dario.azzimonti
+Packaged: 2026-11-10 14:28:09 UTC; dario.azzimonti
 Author: Clement Chevalier [aut],
-  Dario Azzimonti [aut, cre] (<https://orcid.org/0000-0001-5080-3061>),
-  David Ginsbourger [aut] (<https://orcid.org/0000-0003-2724-2678>),
-  Victor Picheny [aut] (<https://orcid.org/0000-0002-4948-5542>),
-  Yann Richet [ctb] (<https://orcid.org/0000-0002-5677-8458>)
-Date/Publication: 2022-09-09 16:52:55 UTC
+  Dario Azzimonti [aut, cre] (ORCID:
+    <https://orcid.org/0000-0001-5080-3061>),
+  David Ginsbourger [aut] (ORCID:
+    <https://orcid.org/0000-0003-2724-2678>),
+  Victor Picheny [aut] (ORCID: <https://orcid.org/0000-0002-4948-5542>),
+  Yann Richet [ctb] (ORCID: <https://orcid.org/0000-0002-5677-8458>)
+Repository: CRAN
+Date/Publication: 2026-11-11 08:40:11 UTC

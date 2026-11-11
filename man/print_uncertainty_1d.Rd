@@ -3,7 +3,7 @@
 \alias{print_uncertainty_1d}
 
 \title{
-Prints a measure of uncertainty for 1d function.
+Prints a measure of uncertainty for 1d function
 }
 \description{
 This function draws the value of a given measure of uncertainty over the whole input domain (1D).
@@ -91,8 +91,8 @@ When set to \code{TRUE}, and if \code{krigmeanplot} is also set to \code{TRUE}, 
 }
 \item{consQuantile}{
 Optional value for plotting conservative quantiles. In order to plot \itemize{
-\item{Conservative estimates: \code{consQuantile} is a list containing at least \code{consLevel} (scalar), with the option \code{typeEx} (character, default = ">").}
-\item{Generic Vorob'ev quantiles: \code{consQuantile} is a scalar corresponding to the Vorob'ev quantile level.}
+\item Conservative estimates: \code{consQuantile} is a list containing at least \code{consLevel} (scalar), with the option \code{typeEx} (character, default = ">").
+\item Generic Vorob'ev quantiles: \code{consQuantile} is a scalar corresponding to the Vorob'ev quantile level.
 }
 }
 \item{...}{
@@ -105,7 +105,7 @@ The integrated uncertainty. If the conservative estimate is computed, it also re
 }
 
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2012), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing vol. 22(3), pp 773-793
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2012), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing vol. 22(3), pp 773-793. \doi{10.1007/s11222-011-9241-4}
 }
 
 \author{
@@ -140,7 +140,7 @@ print_uncertainty_1d(model=model,T=T,lower=lower,upper=upper,
   cex.points=1.5,col.points.init="red",
   krigmeanplot=TRUE,Tplot=TRUE)
 
-\dontrun{
+\donttest{
 uq1d <- print_uncertainty_1d(model=model,T=T,lower=lower,upper=upper,
   main="probability of excursion",xlab="x",ylab="pn",
   cex.points=1.5,col.points.init="red",

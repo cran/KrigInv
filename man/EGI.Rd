@@ -3,7 +3,7 @@
 \alias{EGI}
 
 \title{
-Efficient Global Inversion: sequential inversion algorithm based on Kriging.
+Efficient Global Inversion: sequential inversion algorithm based on Kriging
 }
 \description{
 Sequential sampling based on the optimization of a kriging-based criterion, with model update after each iteration. The criterias aim at identifying an excursion set or one/many level sets. At each iteration batchsize = 1 new locations are evaluated.
@@ -27,10 +27,10 @@ Criterion used for choosing observations.
 }
   \item{method.param}{
 Optional method parameters. For methods\itemize{
-\item{\code{"ranjan"}, \code{"bichon"}, \cr
-\code{"tmse"} and \code{"timse"}: the tolerance value (scalar). If not provided, default value is used (1 for ranjan and bichon, 0 for tmse and timse).}
-\item{\code{"vorobev"}: a list containing \code{penalization} (scalar, default=1), type I penalization, and \code{typeEx},(character, default=">") either ">" or "<" denoting the type of excursion. }
-\item{\code{"vorobCons"} and \code{"vorobVol"}: a list containing  \code{penalization} (scalar, default =1), \code{typeEx} (character, default = ">"), \code{consLevel} (scalar, default=0.95), \code{n_discrete_design} (scalar, default=500*model@d), \code{design} (data.frame, default=\code{as.data.frame(sobol (n = method.param$n_discrete_design, dim = model@d))} ), \code{pred} (list resulting from \code{predict.km}). See also the arguments \code{alpha}, \code{pred}, \code{design}, \code{type} from the function \code{\link[anMC]{conservativeEstimate}}, package \code{anMC}, for more details. }
+\item \code{"ranjan"}, \code{"bichon"}, \cr
+\code{"tmse"} and \code{"timse"}: the tolerance value (scalar). If not provided, default value is used (1 for ranjan and bichon, 0 for tmse and timse).
+\item \code{"vorob"}: a list containing \code{penalization} (scalar, default=1), type I penalization, and \code{typeEx},(character, default=">") either ">" or "<" denoting the type of excursion.
+\item \code{"vorobCons"} and \code{"vorobVol"}: a list containing  \code{penalization} (scalar, default =1), \code{typeEx} (character, default = ">"), \code{consLevel} (scalar, default=0.95), \code{n_discrete_design} (scalar, default=500*model@d), \code{design} (data.frame, default=\code{as.data.frame(sobol (n = method.param$n_discrete_design, dim = model@d))} ), \code{pred} (list resulting from \code{predict.km}). See also the arguments \code{alpha}, \code{pred}, \code{design}, \code{type} from the function \code{\link[anMC]{conservativeEstimate}}, package \code{anMC}, for more details.
 } }
   \item{fun}{
 Objective function.
@@ -95,17 +95,17 @@ If \code{method="vorobCons"} or \code{method="vorobVol"} the list also has compo
 \item{allCE_lvs}{The conservative estimate levels computed at each iteration.}
 }
 \references{
-Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2018). \emph{Adaptive design of experiments for conservative estimation of excursion sets}. Under revision. Preprint at \href{https://hal.archives-ouvertes.fr/hal-01379642}{hal-01379642}
+Azzimonti, D., Ginsbourger, D., Chevalier, C., Bect, J., and Richet, Y. (2021). \emph{Adaptive design of experiments for conservative estimation of excursion sets}. Technometrics, 63(1):13-26. \doi{10.1080/00401706.2019.1693427}
 
-Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2014), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}, Technometrics, vol. 56(4), pp 455-465
+Chevalier C., Bect J., Ginsbourger D., Vazquez E., Picheny V., Richet Y. (2014), \emph{Fast parallel kriging-based stepwise uncertainty reduction with application to the identification of an excursion set}, Technometrics, vol. 56(4), pp 455-465. \doi{10.1080/00401706.2013.860918}
 
-Picheny V., Ginsbourger D., Roustant O., Haftka R.T., (2010) \emph{Adaptive designs of experiments for accurate approximation of a target region}, J. Mech. Des. vol. 132(7)
+Picheny V., Ginsbourger D., Roustant O., Haftka R.T., (2010) \emph{Adaptive designs of experiments for accurate approximation of a target region}, J. Mech. Des. vol. 132(7). \doi{10.1115/1.4001873}
 
 Chevalier C. (2013) \emph{Fast uncertainty reduction strategies relying on Gaussian process models} Ph.D Thesis, University of Bern
 
-Bichon B.J., Eldred M.S., Swiler L.P., Mahadevan S., McFarland J.M. (2008) \emph{Efficient global reliability analysis for nonlinear implicit performance functions}, AIAA Journal 46(10), pp 2459-2468
+Bichon B.J., Eldred M.S., Swiler L.P., Mahadevan S., McFarland J.M. (2008) \emph{Efficient global reliability analysis for nonlinear implicit performance functions}, AIAA Journal 46(10), pp 2459-2468. \doi{10.2514/1.34321}
 
-Ranjan P., Bingham D., Michailidis G. (2008) \emph{Sequential experiment design for contour estimation from complex computer codes} Technometrics 50(4), pp 527-541
+Ranjan P., Bingham D., Michailidis G. (2008) \emph{Sequential experiment design for contour estimation from complex computer codes} Technometrics 50(4), pp 527-541. \doi{10.1198/004017008000000541}
 }
 
 \author{
@@ -143,7 +143,7 @@ optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)
 iter <- 1
 
-\dontrun{
+\donttest{
 obj1 <- EGI(T=T,model=model,method="sur",fun=testfun,iter=iter,
            lower=lower,upper=upper,optimcontrol=optimcontrol,
            integcontrol=integcontrol)
@@ -185,7 +185,7 @@ optimcontrol <- list(method="genoud",pop.size=50)
 integcontrol <- list(distrib="sur",n.points=50)
 iter <- 1
 
-\dontrun{
+\donttest{
 obj1 <- EGI(T=T,model=model.noise,method="sur",fun=testfun,iter=iter,
            lower=lower,upper=upper,optimcontrol=optimcontrol,
            integcontrol=integcontrol,new.noise.var=30*30)
@@ -211,7 +211,7 @@ type="pn",new.points=iter,col.points.end="red",cex.points=2)
 
 ##############
 # Conservative estimates with non-noisy initial observations
-\dontrun{
+\donttest{
   testfun <- branin
 
   ## Minimize Type II error sampling

@@ -3,7 +3,7 @@
 \alias{print_uncertainty_2d}
 
 \title{
-Prints a measure of uncertainty for 2d function.
+Prints a measure of uncertainty for 2d function
 }
 \description{
 This function draws the value of a given measure of uncertainty over the whole input domain (2D).
@@ -104,8 +104,8 @@ Optional boolean. When it is set to \code{TRUE} the Vorob'ev expectation is plot
 }
 \item{consQuantile}{
 Optional value for plotting conservative quantiles. In order to plot \itemize{
-\item{Conservative estimates: \code{consQuantile} is a list containing at least \code{consLevel} (scalar), with the option \code{typeEx} (character, default = ">").}
-\item{Generic Vorob'ev quantiles: \code{consQuantile} is a scalar corresponding to the Vorob'ev quantile level.}
+\item Conservative estimates: \code{consQuantile} is a list containing at least \code{consLevel} (scalar), with the option \code{typeEx} (character, default = ">").
+\item Generic Vorob'ev quantiles: \code{consQuantile} is a scalar corresponding to the Vorob'ev quantile level.
 }
 }
 \item{...}{
@@ -118,7 +118,7 @@ The integrated uncertainty. If the conservative estimate is computed, it also re
 }
 
 \references{
-Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2012), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing vol. 22(3), pp 773-793
+Bect J., Ginsbourger D., Li L., Picheny V., Vazquez E. (2012), \emph{Sequential design of computer experiments for the estimation of a probability of failure}, Statistics and Computing vol. 22(3), pp 773-793. \doi{10.1007/s11222-011-9241-4}
 }
 
 \author{
@@ -148,7 +148,7 @@ response <- testfun(design)
 model <- km(formula=~., design = design,
 	response = response,covtype="matern3_2")
 
-\dontrun{
+\donttest{
 print_uncertainty_2d(model=model,T=T,main="probability of excursion",
                      type="pn",krigmeanplot=TRUE,vorobmean=TRUE)
 

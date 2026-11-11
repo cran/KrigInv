@@ -3,7 +3,7 @@
 \alias{predict_update_km_parallel}
 
 \title{
-Quick update of kriging means and variances when one or many new points are added to the DOE.
+Quick update of kriging means and variances when one or many new points are added to the DOE
 }
 
 \description{
@@ -46,7 +46,7 @@ Kriging covariances between the points \code{newdata} and the r points \code{new
 }
 
 \references{
-Chevalier C., Ginsbourger D. (2014), \emph{Corrected Kriging update formulae for batch-sequential data assimilation}, in Pardo-Iguzquiza, E., et al. (Eds.) Mathematics of Planet Earth, pp 119-122
+Chevalier C., Ginsbourger D. (2014), \emph{Corrected Kriging update formulae for batch-sequential data assimilation}, in Pardo-Iguzquiza, E., et al. (Eds.) Mathematics of Planet Earth, pp 119-122. \doi{10.1007/978-3-642-32408-6_29}
 }
 
 \author{
